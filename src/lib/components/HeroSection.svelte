@@ -1,13 +1,14 @@
 <script>
     import { fly, fade } from "svelte/transition";
-    import { Search, Calendar, Users, MapPin } from "lucide-svelte";
+    import { Search, Calendar, Wallet, MapPin } from "lucide-svelte";
 
     let location = "";
     let date = "";
-    let guests = 1;
+    let budget = "";
 </script>
 
 <section
+    id="home"
     class="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden"
 >
     <!-- Background Image -->
@@ -70,20 +71,21 @@
                 />
             </div>
 
-            <div class="w-full md:w-48 relative group">
+            <div class="flex-1 w-full relative group">
                 <div
                     class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-emerald-600 transition-colors"
                 >
-                    <Users size={20} />
+                    <Wallet size={20} />
                 </div>
                 <select
-                    bind:value={guests}
+                    bind:value={budget}
                     class="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-gray-800 appearance-none cursor-pointer"
                 >
-                    <option value={1}>1 Guest</option>
-                    <option value={2}>2 Guests</option>
-                    <option value={3}>3 Guests</option>
-                    <option value={4}>4+ Guests</option>
+                    <option value="" disabled selected>Chọn mức giá</option>
+                    <option value="under-5">Dưới 5 triệu</option>
+                    <option value="5-10">Từ 5 đến 10 triệu</option>
+                    <option value="10-20">Từ 10 đến 20 triệu</option>
+                    <option value="over-20">Trên 20 triệu</option>
                 </select>
             </div>
 

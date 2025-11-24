@@ -8,6 +8,7 @@
     import Register from "./lib/pages/Register.svelte";
     import Profile from "./lib/pages/Profile.svelte";
     import ForgotPassword from "./lib/pages/ForgotPassword.svelte";
+    import AdminDashboard from "./lib/pages/AdminDashboard.svelte";
     import { onMount } from "svelte";
     import { auth } from "./lib/stores/auth";
 
@@ -66,6 +67,8 @@
     <Profile />
 {:else if currentPath === "/forgot-password"}
     <ForgotPassword />
+{:else if currentPath === "/admin"}
+    <AdminDashboard />
 {:else}
     <div class="min-h-screen bg-slate-50 font-sans text-slate-900">
         <!-- Navigation -->
@@ -77,7 +80,15 @@
                     <!-- Logo -->
                     <a
                         href="/"
-                        on:click|preventDefault={() => navigate("/")}
+                        on:click|preventDefault={() => {
+                            if (currentPath === "/") {
+                                document
+                                    .getElementById("home")
+                                    ?.scrollIntoView({ behavior: "smooth" });
+                            } else {
+                                navigate("/");
+                            }
+                        }}
                         class="flex items-center gap-2 group cursor-pointer"
                     >
                         <div
@@ -119,6 +130,16 @@
                     <!-- Actions -->
                     <div class="hidden md:flex items-center gap-4">
                         {#if $auth.isAuthenticated}
+                            {#if $auth.isAdmin}
+                                <a
+                                    href="/admin"
+                                    on:click|preventDefault={() =>
+                                        navigate("/admin")}
+                                    class="text-slate-600 hover:text-emerald-600 font-medium transition-colors mr-2"
+                                >
+                                    Admin Dashboard
+                                </a>
+                            {/if}
                             <a
                                 href="/profile"
                                 on:click|preventDefault={() =>
@@ -197,6 +218,16 @@
                         <hr class="border-slate-100" />
                         <div class="flex flex-col gap-3">
                             {#if $auth.isAuthenticated}
+                                {#if $auth.isAdmin}
+                                    <a
+                                        href="/admin"
+                                        on:click|preventDefault={() =>
+                                            navigate("/admin")}
+                                        class="text-slate-600 hover:text-emerald-600 font-medium py-2"
+                                    >
+                                        Admin Dashboard
+                                    </a>
+                                {/if}
                                 <a
                                     href="/profile"
                                     on:click|preventDefault={() =>
@@ -235,6 +266,9 @@
                 </div>
             {/if}
         </nav>
+        <!-- Hero Section -->
+        <HeroSection />
+
         <!-- Destinations Section -->
         <section id="destinations" class="py-20 container mx-auto px-4">
             <div class="flex items-end justify-between mb-12">

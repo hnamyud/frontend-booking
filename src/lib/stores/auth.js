@@ -4,24 +4,21 @@ function createAuthStore() {
     const { subscribe, set, update } = writable({
         isAuthenticated: false,
         user: null,
-        token: null
+        token: null,
+        isAdmin: false,
+        adminPermissions: []
     });
 
     return {
         subscribe,
-        login: (token, user) => {
-            // Save to localStorage for persistence across tabs (optional, but good for UX if cookie is session only)
-            // However, with HttpOnly cookie for refresh token, we mainly rely on memory for access token
-            // But user info can be stored in localStorage for display purposes
+        login: (token, user, isAdmin = false, adminPermissions = []) => {
+            // Save to localStorage for persistence across tabs
             localStorage.setItem('user', JSON.stringify(user));
-            // Access token is usually kept in memory if we have a refresh token flow, 
-            // but here we are asked to save it to memory/localStorage in the prompt for /refresh success.
-            // The prompt says: "If Success: Save 'response.data.access_token' to localStorage key 'accessToken'" in the first step,
-            // and "If 200 OK: Save new `access_token` to memory/localStorage" in this step.
-            // I will keep it consistent and save to localStorage as well for now, although memory is safer.
             localStorage.setItem('accessToken', token);
+            localStorage.setItem('isAdmin', JSON.stringify(isAdmin));
+            localStorage.setItem('adminPermissions', JSON.stringify(adminPermissions));
 
-            set({ isAuthenticated: true, user, token });
+            set({ isAuthenticated: true, user, token, isAdmin, adminPermissions });
         },
         logout: async () => {
             try {
@@ -40,7 +37,9 @@ function createAuthStore() {
                 // Clear client state regardless of server response
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
-                set({ isAuthenticated: false, user: null, token: null });
+                localStorage.removeItem('isAdmin');
+                localStorage.removeItem('adminPermissions');
+                set({ isAuthenticated: false, user: null, token: null, isAdmin: false, adminPermissions: [] });
                 window.location.href = '/';
             }
         },
@@ -56,10 +55,19 @@ function createAuthStore() {
                     const data = await response.json();
                     const { access_token, user } = data.data;
 
+                    // Restore admin state from localStorage if available
+                    // Note: In a real app, we might want to re-verify admin status here, 
+                    // but for now we'll trust localStorage or just user role if we wanted to be simpler.
+                    // However, the prompt specifically asked for the verify-admin flow on login.
+                    // For refresh, we'll assume the session is still valid. 
+                    // Better yet, let's just read from localStorage what we saved during login.
+                    const isAdmin = JSON.parse(localStorage.getItem('isAdmin') || 'false');
+                    const adminPermissions = JSON.parse(localStorage.getItem('adminPermissions') || '[]');
+
                     // Update state
                     localStorage.setItem('accessToken', access_token);
                     localStorage.setItem('user', JSON.stringify(user));
-                    set({ isAuthenticated: true, user, token: access_token });
+                    set({ isAuthenticated: true, user, token: access_token, isAdmin, adminPermissions });
                 } else {
                     // If refresh fails (401/403), clear state
                     throw new Error('Refresh failed');
@@ -68,7 +76,9 @@ function createAuthStore() {
                 // Clear state if anything goes wrong
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
-                set({ isAuthenticated: false, user: null, token: null });
+                localStorage.removeItem('isAdmin');
+                localStorage.removeItem('adminPermissions');
+                set({ isAuthenticated: false, user: null, token: null, isAdmin: false, adminPermissions: [] });
             }
         }
     };

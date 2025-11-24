@@ -28,7 +28,38 @@
             const data = await response.json();
 
             if (response.status === 201) {
-                auth.login(data.data.access_token, data.data.user);
+                const { access_token, user } = data.data;
+                let isAdmin = false;
+                let adminPermissions = [];
+
+                // Check if user is ADMIN and verify
+                if (user.role === "ADMIN") {
+                    try {
+                        const verifyResponse = await fetch(
+                            "http://localhost:8080/api/v1/auth/verify-admin",
+                            {
+                                method: "POST",
+                                headers: {
+                                    Authorization: `Bearer ${access_token}`,
+                                    "Content-Type": "application/json",
+                                },
+                            },
+                        );
+
+                        if (verifyResponse.status === 201) {
+                            const verifyData = await verifyResponse.json();
+                            if (verifyData.data.verified) {
+                                isAdmin = true;
+                                adminPermissions = verifyData.data.permissions;
+                            }
+                        }
+                    } catch (verifyErr) {
+                        console.error("Admin verification failed", verifyErr);
+                        // Continue as normal user if verification fails
+                    }
+                }
+
+                auth.login(access_token, user, isAdmin, adminPermissions);
                 window.location.href = "/";
             } else {
                 error = data.message || "Đăng nhập thất bại";

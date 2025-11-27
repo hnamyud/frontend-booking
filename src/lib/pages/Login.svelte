@@ -8,66 +8,45 @@
     let error = "";
     let isLoading = false;
 
+    import { api } from "../api.svelte";
+
     async function handleLogin() {
         isLoading = true;
         error = "";
 
         try {
-            const response = await fetch(
-                "http://localhost:8080/api/v1/auth/login",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include", // CRITICAL: Required for HttpOnly cookie
-                    body: JSON.stringify({ email, password }),
-                },
-            );
+            const data = await api.login(email, password);
+            const { access_token, user } = data.data;
+            let isAdmin = false;
+            let adminPermissions = [];
 
-            const data = await response.json();
+            // Check if user is ADMIN and verify
+            if (user.role === "ADMIN") {
+                try {
+                    const verifyData = await api.request(
+                        "/api/v1/auth/verify-admin",
+                        "POST",
+                        undefined,
+                        {
+                            Authorization: `Bearer ${access_token}`,
+                        },
+                    );
 
-            if (response.status === 201) {
-                const { access_token, user } = data.data;
-                let isAdmin = false;
-                let adminPermissions = [];
-
-                // Check if user is ADMIN and verify
-                if (user.role === "ADMIN") {
-                    try {
-                        const verifyResponse = await fetch(
-                            "http://localhost:8080/api/v1/auth/verify-admin",
-                            {
-                                method: "POST",
-                                headers: {
-                                    Authorization: `Bearer ${access_token}`,
-                                    "Content-Type": "application/json",
-                                },
-                            },
-                        );
-
-                        if (verifyResponse.status === 201) {
-                            const verifyData = await verifyResponse.json();
-                            if (verifyData.data.verified) {
-                                isAdmin = true;
-                                adminPermissions = verifyData.data.permissions;
-                            }
-                        }
-                    } catch (verifyErr) {
-                        console.error("Admin verification failed", verifyErr);
-                        // Continue as normal user if verification fails
+                    if (verifyData.data.verified) {
+                        isAdmin = true;
+                        adminPermissions = verifyData.data.permissions;
                     }
+                } catch (verifyErr) {
+                    console.error("Admin verification failed", verifyErr);
+                    // Continue as normal user if verification fails
                 }
-
-                auth.login(access_token, user, isAdmin, adminPermissions);
-                window.location.href = "/";
-            } else {
-                error = data.message || "Đăng nhập thất bại";
-                alert(error);
             }
+
+            auth.login(access_token, user, isAdmin, adminPermissions);
+            window.location.href = "/";
         } catch (err) {
             console.error(err);
-            error = "Có lỗi xảy ra, vui lòng thử lại sau";
+            error = err.message || "Có lỗi xảy ra, vui lòng thử lại sau";
             alert(error);
         } finally {
             isLoading = false;

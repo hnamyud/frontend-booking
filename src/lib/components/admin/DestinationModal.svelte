@@ -82,43 +82,31 @@
         items = items.filter((_, i) => i !== index);
     }
 
+    import { api } from "../../api.svelte";
+
     async function uploadImage(file) {
         const formData = new FormData();
         formData.append("images", file);
 
-        const response = await fetch("http://localhost:8080/api/v1/upload", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${$auth.token}`,
-            },
-            body: formData,
+        const data = await api.request("/api/v1/upload", "POST", formData, {
+            Authorization: `Bearer ${$auth.token}`,
         });
 
-        if (!response.ok) {
-            throw new Error("Failed to upload image");
-        }
-
-        const data = await response.json();
         // API returns { data: [{ url, public_id }] }
         return data.data[0];
     }
 
     async function deleteImage(publicId) {
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/v1/upload/${publicId}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${$auth.token}`,
-                    },
-                },
+            await api.request(
+                `/api/v1/upload/${publicId}`,
+                "DELETE",
+                undefined,
+                { Authorization: `Bearer ${$auth.token}` },
             );
-            if (!response.ok) {
-                console.warn(`Failed to delete image ${publicId}`);
-            }
         } catch (err) {
             console.error("Error deleting image:", err);
+            console.warn(`Failed to delete image ${publicId}`);
         }
     }
 

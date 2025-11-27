@@ -74,30 +74,23 @@
         return "Khác";
     }
 
+    import { api } from "../api.svelte";
+
     async function fetchUserProfile() {
         try {
             const token = localStorage.getItem("accessToken");
-            const response = await fetch(
-                "http://localhost:8080/api/v1/auth/account",
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-
-            if (response.status === 401) {
+            if (!token) {
                 auth.logout();
                 return;
             }
 
-            if (!response.ok) {
-                throw new Error("Failed to fetch user data");
-            }
+            const data = await api.request(
+                "/api/v1/auth/account",
+                "GET",
+                undefined,
+                { Authorization: `Bearer ${token}` },
+            );
 
-            const data = await response.json();
             userData = data.data;
 
             // Update edit form with current data
@@ -110,6 +103,10 @@
             };
         } catch (err) {
             console.error(err);
+            if (err.message.includes("401")) {
+                auth.logout();
+                return;
+            }
             error = "Không thể tải thông tin người dùng.";
         }
     }
@@ -131,43 +128,30 @@
                 address: editForm.address,
             };
 
-            const response = await fetch(
-                `http://localhost:8080/api/v1/user/${userData._id}`,
-                {
-                    method: "PATCH",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(payload),
-                },
+            await api.request(
+                `/api/v1/user/${userData._id}`,
+                "PATCH",
+                payload,
+                { Authorization: `Bearer ${token}` },
             );
 
-            if (response.status === 401) {
+            successMessage = "Cập nhật thành công!";
+            isEditing = false;
+
+            // CRITICAL: Reload profile data from server
+            await fetchUserProfile();
+
+            // Clear success message after 3 seconds
+            setTimeout(() => {
+                successMessage = "";
+            }, 3000);
+        } catch (err) {
+            console.error(err);
+            if (err.message.includes("401")) {
                 auth.logout();
                 return;
             }
-
-            const data = await response.json();
-
-            if (response.ok) {
-                successMessage = "Cập nhật thành công!";
-                isEditing = false;
-
-                // CRITICAL: Reload profile data from server
-                await fetchUserProfile();
-
-                // Clear success message after 3 seconds
-                setTimeout(() => {
-                    successMessage = "";
-                }, 3000);
-            } else {
-                error = data.message || "Cập nhật thất bại";
-                alert(error);
-            }
-        } catch (err) {
-            console.error(err);
-            error = "Có lỗi xảy ra khi cập nhật thông tin.";
+            error = err.message || "Có lỗi xảy ra khi cập nhật thông tin.";
             alert(error);
         } finally {
             isLoading = false;
@@ -190,46 +174,34 @@
 
         try {
             const token = localStorage.getItem("accessToken");
-            const response = await fetch(
-                "http://localhost:8080/api/v1/user/change-password",
+
+            await api.request(
+                "/api/v1/user/change-password",
+                "PATCH",
                 {
-                    method: "PATCH",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        oldPassword: passwordForm.oldPassword,
-                        newPassword: passwordForm.newPassword,
-                        confirmPassword: passwordForm.confirmPassword,
-                    }),
+                    oldPassword: passwordForm.oldPassword,
+                    newPassword: passwordForm.newPassword,
+                    confirmPassword: passwordForm.confirmPassword,
                 },
+                { Authorization: `Bearer ${token}` },
             );
 
-            if (response.status === 401) {
+            alert("Đổi mật khẩu thành công!");
+            showPasswordModal = false;
+
+            // Clear password form
+            passwordForm = {
+                oldPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            };
+        } catch (err) {
+            console.error(err);
+            if (err.message.includes("401")) {
                 auth.logout();
                 return;
             }
-
-            const data = await response.json();
-
-            if (response.ok) {
-                alert("Đổi mật khẩu thành công!");
-                showPasswordModal = false;
-
-                // Clear password form
-                passwordForm = {
-                    oldPassword: "",
-                    newPassword: "",
-                    confirmPassword: "",
-                };
-            } else {
-                error = data.message || "Đổi mật khẩu thất bại";
-                alert(error);
-            }
-        } catch (err) {
-            console.error(err);
-            error = "Có lỗi xảy ra khi đổi mật khẩu.";
+            error = err.message || "Có lỗi xảy ra khi đổi mật khẩu.";
             alert(error);
         } finally {
             isLoading = false;

@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { api } from '../api.svelte';
 
 function createAuthStore() {
     const { subscribe, set, update } = writable({
@@ -21,26 +22,24 @@ function createAuthStore() {
             set({ isAuthenticated: true, user, token, isAdmin, adminPermissions });
         },
         logout: async () => {
+            // Optimistic UI: Clear state immediately
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            localStorage.removeItem('isAdmin');
+            localStorage.removeItem('adminPermissions');
+            set({ isAuthenticated: false, user: null, token: null, isAdmin: false, adminPermissions: [] });
+
+            // Soft navigation to home page (avoids hard reload)
+            window.history.pushState({}, '', '/');
+            window.dispatchEvent(new PopStateEvent('popstate'));
+
             try {
-                // Call logout endpoint to clear cookie on server
-                const token = localStorage.getItem('accessToken');
-                await fetch('http://localhost:8080/api/v1/auth/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    credentials: 'include' // CRITICAL: Required for HttpOnly cookie
-                });
+                // Call centralized logout which handles API and CSRF refresh
+                // We await this to ensure the request completes. 
+                // Since we are using soft navigation, the JS context remains alive.
+                await api.logout();
             } catch (error) {
                 console.error('Logout failed', error);
-            } finally {
-                // Clear client state regardless of server response
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('user');
-                localStorage.removeItem('isAdmin');
-                localStorage.removeItem('adminPermissions');
-                set({ isAuthenticated: false, user: null, token: null, isAdmin: false, adminPermissions: [] });
-                window.location.href = '/';
             }
         },
         init: async () => {

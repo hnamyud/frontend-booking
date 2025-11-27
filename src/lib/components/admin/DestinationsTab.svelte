@@ -7,7 +7,9 @@
         Plus,
         ChevronLeft,
         ChevronRight,
+        X,
     } from "lucide-svelte";
+    import { fade } from "svelte/transition";
     import DestinationModal from "./DestinationModal.svelte";
 
     let destinations = [];
@@ -25,29 +27,29 @@
     let selectedDestination = null;
     let isSubmitting = false;
 
+    // Lightbox State
+    let isLightboxOpen = false;
+    let lightboxImages = [];
+    let currentLightboxIndex = 0;
+
+    import { api } from "../../api.svelte";
+
     async function fetchDestinations(page = 1) {
         isLoading = true;
         error = "";
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/v1/destination?current=${page}&pageSize=${meta.pageSize}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${$auth.token}`,
-                    },
-                },
+            const data = await api.request(
+                `/api/v1/destination?current=${page}&pageSize=${meta.pageSize}`,
+                "GET",
+                undefined,
+                { Authorization: `Bearer ${$auth.token}` },
             );
 
-            if (response.ok) {
-                const data = await response.json();
-                destinations = data.data.result;
-                meta = data.data.meta;
-            } else {
-                error = "Failed to fetch destinations";
-            }
+            destinations = data.data.result;
+            meta = data.data.meta;
         } catch (err) {
             console.error(err);
-            error = "An error occurred while fetching destinations";
+            error = "Failed to fetch destinations";
         } finally {
             isLoading = false;
         }
@@ -78,21 +80,14 @@
             return;
 
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/v1/destination/${id}`,
-                {
-                    method: "DELETE",
-                    headers: {
-                        Authorization: `Bearer ${$auth.token}`,
-                    },
-                },
+            await api.request(
+                `/api/v1/destination/${id}`,
+                "DELETE",
+                undefined,
+                { Authorization: `Bearer ${$auth.token}` },
             );
 
-            if (response.ok) {
-                fetchDestinations(meta.current);
-            } else {
-                alert("Failed to delete destination");
-            }
+            fetchDestinations(meta.current);
         } catch (err) {
             console.error(err);
             alert("Error deleting destination");
@@ -105,35 +100,68 @@
 
         try {
             const url = selectedDestination
-                ? `http://localhost:8080/api/v1/destination/${selectedDestination._id}`
-                : "http://localhost:8080/api/v1/destination";
+                ? `/api/v1/destination/${selectedDestination._id}`
+                : "/api/v1/destination";
 
             const method = selectedDestination ? "PATCH" : "POST";
 
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    Authorization: `Bearer ${$auth.token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
+            await api.request(url, method, payload, {
+                Authorization: `Bearer ${$auth.token}`,
             });
 
-            if (response.ok) {
-                isModalOpen = false;
-                fetchDestinations(meta.current);
-            } else {
-                const data = await response.json();
-                alert(data.message || "Operation failed");
-            }
+            isModalOpen = false;
+            fetchDestinations(meta.current);
         } catch (err) {
             console.error(err);
-            alert("An error occurred");
+            alert(err.message || "An error occurred");
         } finally {
             isSubmitting = false;
         }
     }
+
+    // Lightbox Functions
+    function openLightbox(images, index = 0) {
+        if (!images || images.length === 0) return;
+        lightboxImages = images;
+        currentLightboxIndex = index;
+        isLightboxOpen = true;
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+        isLightboxOpen = false;
+        lightboxImages = [];
+        currentLightboxIndex = 0;
+        document.body.style.overflow = "";
+    }
+
+    function nextImage(e) {
+        e?.stopPropagation();
+        if (currentLightboxIndex < lightboxImages.length - 1) {
+            currentLightboxIndex++;
+        } else {
+            currentLightboxIndex = 0;
+        }
+    }
+
+    function prevImage(e) {
+        e?.stopPropagation();
+        if (currentLightboxIndex > 0) {
+            currentLightboxIndex--;
+        } else {
+            currentLightboxIndex = lightboxImages.length - 1;
+        }
+    }
+
+    function handleKeydown(e) {
+        if (!isLightboxOpen) return;
+        if (e.key === "Escape") closeLightbox();
+        if (e.key === "ArrowRight") nextImage();
+        if (e.key === "ArrowLeft") prevImage();
+    }
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <div class="space-y-6">
     <div class="flex justify-between items-center">
@@ -178,11 +206,20 @@
                             class="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                         >
                             <td class="py-4 px-4">
-                                <img
-                                    src={dest.images[0]?.url}
-                                    alt={dest.name}
-                                    class="w-16 h-12 object-cover rounded-lg"
-                                />
+                                <button
+                                    class="block relative group overflow-hidden rounded-lg"
+                                    on:click={() =>
+                                        openLightbox(dest.images, 0)}
+                                >
+                                    <img
+                                        src={dest.images[0]?.url}
+                                        alt={dest.name}
+                                        class="w-16 h-12 object-cover transition-transform group-hover:scale-110"
+                                    />
+                                    <div
+                                        class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"
+                                    ></div>
+                                </button>
                             </td>
                             <td class="py-4 px-4 font-medium">{dest.name}</td>
                             <td class="py-4 px-4">{dest.country}</td>
@@ -261,4 +298,58 @@
         on:close={() => (isModalOpen = false)}
         on:submit={handleSubmit}
     />
+
+    <!-- Lightbox Overlay -->
+    {#if isLightboxOpen}
+        <div
+            class="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm"
+            on:click={closeLightbox}
+            transition:fade={{ duration: 200 }}
+        >
+            <!-- Close Button (Top Left) -->
+            <button
+                on:click={closeLightbox}
+                class="absolute top-6 left-6 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 p-3 rounded-full transition-all z-50"
+            >
+                <X size={32} />
+            </button>
+
+            <!-- Main Image Container -->
+            <div
+                class="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center"
+                on:click|stopPropagation
+            >
+                {#if lightboxImages[currentLightboxIndex]}
+                    <img
+                        src={lightboxImages[currentLightboxIndex].url}
+                        alt="Lightbox"
+                        class="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                    />
+                {/if}
+
+                <!-- Navigation Arrows -->
+                {#if lightboxImages.length > 1}
+                    <button
+                        on:click={prevImage}
+                        class="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 p-3 rounded-full transition-all backdrop-blur-md"
+                    >
+                        <ChevronLeft size={40} />
+                    </button>
+                    <button
+                        on:click={nextImage}
+                        class="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 p-3 rounded-full transition-all backdrop-blur-md"
+                    >
+                        <ChevronRight size={40} />
+                    </button>
+                {/if}
+
+                <!-- Image Counter -->
+                <div
+                    class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 bg-black/40 px-4 py-1 rounded-full text-sm backdrop-blur-md font-medium tracking-wide"
+                >
+                    {currentLightboxIndex + 1} / {lightboxImages.length}
+                </div>
+            </div>
+        </div>
+    {/if}
 </div>

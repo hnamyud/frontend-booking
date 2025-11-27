@@ -12,6 +12,7 @@
         LayoutDashboard,
     } from "lucide-svelte";
     import DestinationsTab from "../components/admin/DestinationsTab.svelte";
+    import UsersTab from "../components/admin/UsersTab.svelte";
 
     let activeTab = "users";
 
@@ -91,6 +92,8 @@
             >
                 {#if activeTab === "destinations"}
                     <DestinationsTab />
+                {:else if activeTab === "users"}
+                    <UsersTab />
                 {:else}
                     <Settings size={48} class="opacity-20" />
                     <p>Content for {activeTab} management will go here.</p>

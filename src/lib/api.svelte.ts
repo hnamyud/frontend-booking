@@ -66,6 +66,93 @@ class ApiClient {
             this.isAuthenticated = false;
         }
     }
+
+    private getAuthHeaders(): Record<string, string> {
+        const token = localStorage.getItem('accessToken');
+        return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+
+    // Tour API
+    async getTours(params: GetToursParams = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.current) queryParams.append('current', params.current.toString());
+        if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+        if (params.destinationName) queryParams.append('destinationName', params.destinationName);
+        if (params.priceMin) queryParams.append('priceMin', params.priceMin.toString());
+        if (params.priceMax) queryParams.append('priceMax', params.priceMax.toString());
+        if (params.timeStart_from) queryParams.append('timeStart_from', params.timeStart_from);
+        if (params.timeEnd_to) queryParams.append('timeEnd_to', params.timeEnd_to);
+
+        const queryString = queryParams.toString();
+        const url = `/api/v1/tour${queryString ? `?${queryString}` : ''}`;
+        return this.request<GetToursResponse>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async createTour(data: CreateTourPayload) {
+        return this.request<any>('/api/v1/tour/', 'POST', data, this.getAuthHeaders());
+    }
+
+    async updateTour(id: string, data: CreateTourPayload) {
+        return this.request<any>(`/api/v1/tour/${id}`, 'PATCH', data, this.getAuthHeaders());
+    }
+
+    async deleteTour(id: string) {
+        return this.request<any>(`/api/v1/tour/${id}`, 'DELETE', undefined, this.getAuthHeaders());
+    }
+}
+
+export interface GetToursParams {
+    current?: number;
+    pageSize?: number;
+    destinationName?: string;
+    priceMin?: number;
+    priceMax?: number;
+    timeStart_from?: string;
+    timeEnd_to?: string;
+}
+
+export interface Tour {
+    _id: string;
+    name: string;
+    description: string;
+    duration: string;
+    price: number;
+    timeStart: string;
+    timeEnd: string;
+    totalSlots: number;
+    availableSlots: number;
+    bookedParticipants: number;
+    isAvailable: boolean;
+    destinations: any[]; // Define specific type if needed
+    images?: { url: string; public_id: string }[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GetToursResponse {
+    statusCode: number;
+    message: string;
+    data: {
+        meta: {
+            current: number;
+            pageSize: number;
+            pages: number;
+            total: number;
+        };
+        result: Tour[];
+    };
+}
+
+export interface CreateTourPayload {
+    name: string;
+    description: string;
+    duration: string;
+    price: number;
+    timeStart: string;
+    timeEnd: string;
+    totalSlots: number;
+    isAvailable: boolean;
+    destinations: string[];
 }
 
 export const api = new ApiClient();

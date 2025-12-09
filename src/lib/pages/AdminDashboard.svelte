@@ -13,6 +13,7 @@
     } from "lucide-svelte";
     import DestinationsTab from "../components/admin/DestinationsTab.svelte";
     import UsersTab from "../components/admin/UsersTab.svelte";
+    import ToursTab from "../components/admin/ToursTab.svelte";
 
     let activeTab = "users";
 
@@ -87,18 +88,20 @@
         <div
             class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 min-h-[500px]"
         >
-            <div
-                class="flex items-center justify-center h-full text-slate-400 flex-col gap-4"
-            >
-                {#if activeTab === "destinations"}
-                    <DestinationsTab />
-                {:else if activeTab === "users"}
-                    <UsersTab />
-                {:else}
+            {#if activeTab === "destinations"}
+                <DestinationsTab />
+            {:else if activeTab === "users"}
+                <UsersTab />
+            {:else if activeTab === "tours"}
+                <ToursTab />
+            {:else}
+                <div
+                    class="flex items-center justify-center h-full text-slate-400 flex-col gap-4"
+                >
                     <Settings size={48} class="opacity-20" />
                     <p>Content for {activeTab} management will go here.</p>
-                {/if}
-            </div>
+                </div>
+            {/if}
         </div>
     </main>
 </div>

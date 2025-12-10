@@ -99,6 +99,44 @@ class ApiClient {
     async deleteTour(id: string) {
         return this.request<any>(`/api/v1/tour/${id}`, 'DELETE', undefined, this.getAuthHeaders());
     }
+
+    // Booking API
+    async getBookings(params: GetBookingsParams = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.current) queryParams.append('current', params.current.toString());
+        if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+
+        const queryString = queryParams.toString();
+        const url = `/api/v1/bookings${queryString ? `?${queryString}` : ''}`;
+        return this.request<GetBookingsResponse>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async updateBooking(id: string, data: UpdateBookingPayload) {
+        return this.request<any>(`/api/v1/bookings/${id}`, 'PATCH', data, this.getAuthHeaders());
+    }
+
+    async deleteBooking(id: string) {
+        return this.request<any>(`/api/v1/bookings/${id}`, 'DELETE', undefined, this.getAuthHeaders());
+    }
+
+    // Payment API
+    async getPayments(params: GetPaymentsParams = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.current) queryParams.append('current', params.current.toString());
+        if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+
+        const queryString = queryParams.toString();
+        const url = `/api/v1/payments${queryString ? `?${queryString}` : ''}`;
+        return this.request<GetPaymentsResponse>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async updatePayment(id: string, data: UpdatePaymentPayload) {
+        return this.request<any>(`/api/v1/payments/${id}`, 'PATCH', data, this.getAuthHeaders());
+    }
+
+    async deletePayment(id: string) {
+        return this.request<any>(`/api/v1/payments/${id}`, 'DELETE', undefined, this.getAuthHeaders());
+    }
 }
 
 export interface GetToursParams {
@@ -153,6 +191,97 @@ export interface CreateTourPayload {
     totalSlots: number;
     isAvailable: boolean;
     destinations: string[];
+}
+
+// Booking Interfaces
+export interface GetBookingsParams {
+    current?: number;
+    pageSize?: number;
+}
+
+export interface BookingContactInfo {
+    fullName: string;
+    phone: string;
+    email: string;
+}
+
+export interface Booking {
+    _id: string;
+    tour_id: string;
+    user_id: string;
+    numberOfGuests: number;
+    totalPrice: number;
+    status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'EXPIRED' | 'FAILED' | 'COMPLETED';
+    payment_status: 'PENDING' | 'SUCCESS' | 'FAILED';
+    contactInfo: BookingContactInfo;
+    note: string;
+    isUsed: boolean;
+    isDeleted: boolean;
+    createdAt: string;
+    updatedAt: string;
+    payment_id?: string;
+    ticketCode?: string;
+    checkinAt?: string;
+}
+
+export interface GetBookingsResponse {
+    statusCode: number;
+    message: string;
+    data: {
+        meta: {
+            current: number;
+            pageSize: number;
+            pages: number;
+            total: number;
+        };
+        result: Booking[];
+    };
+}
+
+export interface UpdateBookingPayload {
+    status?: string;
+    payment_status?: string;
+    contactInfo?: BookingContactInfo;
+    note?: string;
+}
+
+// Payment Interfaces
+export interface GetPaymentsParams {
+    current?: number;
+    pageSize?: number;
+}
+
+export interface Payment {
+    _id: string;
+    booking_id: string;
+    user_id: string;
+    code: string;
+    provider: string; // e.g., 'VNPAY'
+    amount: number;
+    currency: string;
+    status: 'PENDING' | 'SUCCESS' | 'FAILED';
+    isDeleted: boolean;
+    deletedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GetPaymentsResponse {
+    statusCode: number;
+    message: string;
+    data: {
+        meta: {
+            current: number;
+            pageSize: number;
+            pages: number;
+            total: number;
+        };
+        result: Payment[];
+    };
+}
+
+export interface UpdatePaymentPayload {
+    status: string;
 }
 
 export const api = new ApiClient();

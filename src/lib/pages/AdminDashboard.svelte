@@ -14,6 +14,8 @@
     import DestinationsTab from "../components/admin/DestinationsTab.svelte";
     import UsersTab from "../components/admin/UsersTab.svelte";
     import ToursTab from "../components/admin/ToursTab.svelte";
+    import BookingsTab from "../components/admin/BookingsTab.svelte";
+    import PaymentsTab from "../components/admin/PaymentsTab.svelte";
 
     let activeTab = "users";
 
@@ -94,6 +96,10 @@
                 <UsersTab />
             {:else if activeTab === "tours"}
                 <ToursTab />
+            {:else if activeTab === "bookings"}
+                <BookingsTab />
+            {:else if activeTab === "payments"}
+                <PaymentsTab />
             {:else}
                 <div
                     class="flex items-center justify-center h-full text-slate-400 flex-col gap-4"

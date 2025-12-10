@@ -1,43 +1,71 @@
-# Svelte + Vite
+# Travel Booking Management System
 
-This template should help get you started developing with Svelte in Vite.
+A modern, responsive frontend application developed with Svelte 5 and Vite for managing travel bookings, tours, and destinations. This project features a comprehensive Admin Dashboard for efficient management of the platform's resources.
 
-## Recommended IDE Setup
+## 🚀 Key Features
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+### 🛠 Admin Dashboard
+- **User Management**: View, create, and edit system users (Admin/User roles).
+- **Tour Management**: Create and manage tour packages, including details like duration, price, and availability.
+- **Destination Management**: Manage travel destinations with images and descriptions.
+- **Booking Management**: Track and manage customer bookings, update statuses (Pending, Confirmed, Cancelled, etc.).
+- **Payment Management**: Monitor payment transactions and status updates.
 
-## Need an official Svelte framework?
+### 🔐 Security & Identity
+- **Authentication**: Secure login/logout flows using JWT.
+- **Role-Based Access**: Dedicated views and protections for Admin vs. regular Users.
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+## 🛠 Tech Stack
 
-## Technical considerations
+- **Framework**: [Svelte 5](https://svelte.dev/) (using modern Runes syntax)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Icons**: [Lucide Svelte](https://lucide.dev/)
+- **API Client**: Custom `ApiClient` wrapper with automatic token handling and interceptors.
 
-**Why use this over SvelteKit?**
+## 📦 Installation & Setup
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+1.  **Clone the repository**
+    ```bash
+    git clone <repository-url>
+    cd Frontend-booking
+    ```
 
-This template contains as little as possible to get started with Vite + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
+2.  **Install dependencies**
+    ```bash
+    npm install
+    ```
 
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
+3.  **Run the development server**
+    ```bash
+    npm run dev
+    ```
+    The application will be available at `http://localhost:5173` (or the port shown in your terminal).
 
-**Why include `.vscode/extensions.json`?**
+4.  **Build for production**
+    ```bash
+    npm run build
+    ```
 
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
+## 📂 Project Structure
 
-**Why enable `checkJs` in the JS template?**
-
-It is likely that most cases of changing variable types in runtime are likely to be accidental, rather than deliberate. This provides advanced typechecking out of the box. Should you like to take advantage of the dynamically-typed nature of JavaScript, it is trivial to change the configuration.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/sveltejs/svelte-hmr/tree/master/packages/svelte-hmr#preservation-of-local-state).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```js
-// store.js
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
 ```
+src/
+├── lib/
+│   ├── components/
+│   │   └── admin/       # Admin specific components (Tabs, Modals)
+│   ├── pages/
+│   │   └── AdminDashboard.svelte  # Main Admin layout
+│   ├── stores/          # Global state management
+│   └── api.svelte.ts    # Centralized API client service
+├── app.css              # Global styles & Tailwind directives
+└── ...
+```
+
+## 🤝 Contributing
+
+1.  Fork the repository.
+2.  Create a feature branch (`git checkout -b feature/amazing-feature`).
+3.  Commit your changes (`git commit -m 'Add some amazing feature'`).
+4.  Push to the branch (`git push origin feature/amazing-feature`).
+5.  Open a Pull Request.

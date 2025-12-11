@@ -9,6 +9,8 @@
     import Profile from "./lib/pages/Profile.svelte";
     import ForgotPassword from "./lib/pages/ForgotPassword.svelte";
     import AdminDashboard from "./lib/pages/AdminDashboard.svelte";
+    import UserTours from "./lib/pages/UserTours.svelte";
+    import TourDetail from "./lib/pages/TourDetail.svelte";
     import { onMount } from "svelte";
     import { auth } from "./lib/stores/auth";
 
@@ -16,9 +18,20 @@
     let isMobileMenuOpen = false;
 
     // Simple routing
-    function navigate(path) {
-        window.history.pushState({}, "", path);
-        currentPath = path;
+    // Simple routing
+    async function navigate(path) {
+        if (!document.startViewTransition) {
+            window.history.pushState({}, "", path);
+            currentPath = path;
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+        }
+
+        document.startViewTransition(() => {
+            window.history.pushState({}, "", path);
+            currentPath = path;
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
     }
 
     onMount(() => {
@@ -27,8 +40,17 @@
         const handlePopState = () => {
             currentPath = window.location.pathname;
         };
+        const handleNavigate = (e) => {
+            navigate(e.detail);
+        };
+
         window.addEventListener("popstate", handlePopState);
-        return () => window.removeEventListener("popstate", handlePopState);
+        window.addEventListener("app:navigate", handleNavigate);
+
+        return () => {
+            window.removeEventListener("popstate", handlePopState);
+            window.removeEventListener("app:navigate", handleNavigate);
+        };
     });
 
     const destinations = [
@@ -69,6 +91,10 @@
     <ForgotPassword />
 {:else if currentPath === "/admin"}
     <AdminDashboard />
+{:else if currentPath === "/tours"}
+    <UserTours />
+{:else if /^\/tours\/[a-zA-Z0-9]+$/.test(currentPath)}
+    <TourDetail params={{ id: currentPath.split("/").pop() }} />
 {:else}
     <div class="min-h-screen bg-slate-50 font-sans text-slate-900">
         <!-- Navigation -->
@@ -105,6 +131,12 @@
 
                     <!-- Desktop Menu -->
                     <div class="hidden md:flex items-center gap-8">
+                        <a
+                            href="/tours"
+                            on:click|preventDefault={() => navigate("/tours")}
+                            class="text-slate-600 hover:text-emerald-600 font-medium transition-colors"
+                            >Tours</a
+                        >
                         <a
                             href="#destinations"
                             class="text-slate-600 hover:text-emerald-600 font-medium transition-colors"
@@ -195,6 +227,15 @@
                     <div
                         class="container mx-auto px-4 py-4 flex flex-col gap-4"
                     >
+                        <a
+                            href="/tours"
+                            on:click|preventDefault={() => {
+                                navigate("/tours");
+                                isMobileMenuOpen = false;
+                            }}
+                            class="text-slate-600 hover:text-emerald-600 font-medium py-2"
+                            >Tours</a
+                        >
                         <a
                             href="#destinations"
                             class="text-slate-600 hover:text-emerald-600 font-medium py-2"

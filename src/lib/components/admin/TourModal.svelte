@@ -13,6 +13,7 @@
     let name = "";
     let description = "";
     let duration = "";
+    let durationDays = 1;
     let price = 0;
     let timeStart = "";
     let timeEnd = "";
@@ -28,6 +29,7 @@
             name = tour.name;
             description = tour.description;
             duration = tour.duration;
+            durationDays = tour.durationDays || 1;
             price = tour.price;
             timeStart = tour.timeStart
                 ? new Date(tour.timeStart).toISOString().slice(0, 16)
@@ -47,6 +49,7 @@
         name = "";
         description = "";
         duration = "";
+        durationDays = 1;
         price = 0;
         timeStart = "";
         timeEnd = "";
@@ -97,6 +100,7 @@
             name,
             description,
             duration,
+            durationDays: Number(durationDays),
             price: Number(price),
             timeStart: new Date(timeStart).toISOString(),
             timeEnd: new Date(timeEnd).toISOString(),
@@ -164,6 +168,21 @@
                             bind:value={duration}
                             class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
                             placeholder="e.g. 3 days 2 nights"
+                        />
+                    </div>
+                    <div class="space-y-2">
+                        <label
+                            for="durationDays"
+                            class="text-sm font-medium text-slate-700"
+                            >Duration (Days)</label
+                        >
+                        <input
+                            id="durationDays"
+                            type="number"
+                            min="1"
+                            bind:value={durationDays}
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                            placeholder="e.g. 3"
                         />
                     </div>
                 </div>

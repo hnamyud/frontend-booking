@@ -159,6 +159,9 @@
                                 <div class="flex items-center gap-1 text-sm">
                                     <Clock size={14} class="text-slate-400" />
                                     {tour.duration}
+                                    <span class="text-xs text-slate-400"
+                                        >({tour.durationDays || "?"} days)</span
+                                    >
                                 </div>
                             </td>
                             <td class="py-4 px-4">

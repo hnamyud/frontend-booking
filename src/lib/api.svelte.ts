@@ -82,10 +82,15 @@ class ApiClient {
         if (params.priceMax) queryParams.append('priceMax', params.priceMax.toString());
         if (params.timeStart_from) queryParams.append('timeStart_from', params.timeStart_from);
         if (params.timeEnd_to) queryParams.append('timeEnd_to', params.timeEnd_to);
+        if (params.sort) queryParams.append('sort', params.sort);
 
         const queryString = queryParams.toString();
         const url = `/api/v1/tour${queryString ? `?${queryString}` : ''}`;
         return this.request<GetToursResponse>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async getTour(id: string) {
+        return this.request<GetTourResponse>(`/api/v1/tour/${id}`, 'GET', undefined, this.getAuthHeaders());
     }
 
     async createTour(data: CreateTourPayload) {
@@ -147,6 +152,7 @@ export interface GetToursParams {
     priceMax?: number;
     timeStart_from?: string;
     timeEnd_to?: string;
+    sort?: string;
 }
 
 export interface Tour {
@@ -154,6 +160,7 @@ export interface Tour {
     name: string;
     description: string;
     duration: string;
+    durationDays: number;
     price: number;
     timeStart: string;
     timeEnd: string;
@@ -181,10 +188,17 @@ export interface GetToursResponse {
     };
 }
 
+export interface GetTourResponse {
+    statusCode: number;
+    message: string;
+    data: Tour;
+}
+
 export interface CreateTourPayload {
     name: string;
     description: string;
     duration: string;
+    durationDays: number;
     price: number;
     timeStart: string;
     timeEnd: string;

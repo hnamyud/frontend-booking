@@ -11,6 +11,9 @@
     import AdminDashboard from "./lib/pages/AdminDashboard.svelte";
     import UserTours from "./lib/pages/UserTours.svelte";
     import TourDetail from "./lib/pages/TourDetail.svelte";
+    import Booking from "./lib/pages/Booking.svelte";
+    import Payment from "./lib/pages/Payment.svelte";
+    import PaymentReturn from "./lib/pages/PaymentReturn.svelte";
     import { onMount } from "svelte";
     import { auth } from "./lib/stores/auth";
 
@@ -22,14 +25,16 @@
     async function navigate(path) {
         if (!document.startViewTransition) {
             window.history.pushState({}, "", path);
-            currentPath = path;
+            const url = new URL(path, window.location.origin);
+            currentPath = url.pathname;
             window.scrollTo({ top: 0, behavior: "smooth" });
             return;
         }
 
         document.startViewTransition(() => {
             window.history.pushState({}, "", path);
-            currentPath = path;
+            const url = new URL(path, window.location.origin);
+            currentPath = url.pathname;
             window.scrollTo({ top: 0, behavior: "smooth" });
         });
     }
@@ -95,6 +100,12 @@
     <UserTours />
 {:else if /^\/tours\/[a-zA-Z0-9]+$/.test(currentPath)}
     <TourDetail params={{ id: currentPath.split("/").pop() }} />
+{:else if /^\/booking\/[a-zA-Z0-9]+$/.test(currentPath)}
+    <Booking params={{ id: currentPath.split("/").pop() }} />
+{:else if currentPath === "/payments/vnpay-return" || currentPath === "/payment/vnpay-return"}
+    <PaymentReturn />
+{:else if /^\/payment\/[a-zA-Z0-9]+$/.test(currentPath)}
+    <Payment params={{ id: currentPath.split("/").pop() }} />
 {:else}
     <div class="min-h-screen bg-slate-50 font-sans text-slate-900">
         <!-- Navigation -->

@@ -18,6 +18,7 @@
         ChevronLeft,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
+    import { auth } from "../stores/auth";
 
     export let params = {}; // Will receive id from manual router logic
     let tourId = "";
@@ -54,7 +55,10 @@
             const res = await api.getTour(tourId);
             tour = res.data;
             if (tour.timeStart) {
-                selectedDate = tour.timeStart;
+                // Initialize input with date string YYYY-MM-DD
+                selectedDate = new Date(tour.timeStart)
+                    .toISOString()
+                    .split("T")[0];
             }
         } catch (err) {
             console.error(err);
@@ -425,16 +429,21 @@
                                     class="text-sm font-semibold text-slate-900"
                                     >Departure Date</label
                                 >
-                                <div
-                                    class="p-3 border border-slate-200 rounded-xl bg-slate-50 flex items-center gap-3 text-slate-700"
-                                >
+                                <div class="relative flex items-center">
                                     <Calendar
                                         size={18}
-                                        class="text-slate-400"
+                                        class="absolute left-3 text-slate-400 pointer-events-none"
                                     />
-                                    <span class="font-medium"
-                                        >{formatDate(tour.timeStart)}</span
-                                    >
+                                    <input
+                                        type="date"
+                                        bind:value={selectedDate}
+                                        min={tour.timeStart
+                                            ? new Date(tour.timeStart)
+                                                  .toISOString()
+                                                  .split("T")[0]
+                                            : ""}
+                                        class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl bg-white text-slate-900 font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
+                                    />
                                 </div>
                             </div>
 
@@ -484,6 +493,21 @@
 
                             <!-- Action -->
                             <button
+                                on:click={() => {
+                                    if (!$auth.isAuthenticated) {
+                                        window.dispatchEvent(
+                                            new CustomEvent("app:navigate", {
+                                                detail: "/login",
+                                            }),
+                                        );
+                                        return;
+                                    }
+                                    window.dispatchEvent(
+                                        new CustomEvent("app:navigate", {
+                                            detail: `/booking/${tour._id}?guests=${guests}&date=${selectedDate}`,
+                                        }),
+                                    );
+                                }}
                                 class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98]"
                             >
                                 Book Now

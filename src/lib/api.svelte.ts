@@ -116,8 +116,16 @@ class ApiClient {
         return this.request<GetBookingsResponse>(url, 'GET', undefined, this.getAuthHeaders());
     }
 
+    async createBooking(data: any) {
+        return this.request<any>('/api/v1/bookings', 'POST', data, this.getAuthHeaders());
+    }
+
     async updateBooking(id: string, data: UpdateBookingPayload) {
         return this.request<any>(`/api/v1/bookings/${id}`, 'PATCH', data, this.getAuthHeaders());
+    }
+
+    async getBooking(id: string) {
+        return this.request<any>(`/api/v1/bookings/${id}`, 'GET', undefined, this.getAuthHeaders());
     }
 
     async deleteBooking(id: string) {
@@ -125,6 +133,14 @@ class ApiClient {
     }
 
     // Payment API
+    async createPayment(data: { booking_id: string; provider: string; amount: number; currency: string }) {
+        return this.request<any>('/api/v1/payments', 'POST', data, this.getAuthHeaders());
+    }
+
+    async verifyVnpayReturn(query: string) {
+        return this.request<any>(`/api/v1/payments/vnpay-return${query}`, 'GET', undefined, this.getAuthHeaders());
+    }
+
     async getPayments(params: GetPaymentsParams = {}) {
         const queryParams = new URLSearchParams();
         if (params.current) queryParams.append('current', params.current.toString());

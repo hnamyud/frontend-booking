@@ -132,6 +132,10 @@ class ApiClient {
         return this.request<any>(`/api/v1/bookings/${id}`, 'DELETE', undefined, this.getAuthHeaders());
     }
 
+    async verifyTicket(ticketCode: string) {
+        return this.request<any>('/api/v1/bookings/verify-ticket', 'POST', { ticketCode }, this.getAuthHeaders());
+    }
+
     // Payment API
     async createPayment(data: { booking_id: string; provider: string; amount: number; currency: string }) {
         return this.request<any>('/api/v1/payments', 'POST', data, this.getAuthHeaders());
@@ -178,6 +182,20 @@ class ApiClient {
         const queryString = queryParams.toString();
         const url = `/api/v1/user/payments${queryString ? `?${queryString}` : ''}`;
         return this.request<GetPaymentsResponse>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+    // Review API
+    async getReviews(params: any = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.current) queryParams.append('current', params.current.toString());
+        if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+
+        const queryString = queryParams.toString();
+        const url = `/api/v1/review${queryString ? `?${queryString}` : ''}`;
+        return this.request<any>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async deleteReview(id: string) {
+        return this.request<any>(`/api/v1/review/${id}`, 'DELETE', undefined, this.getAuthHeaders());
     }
 }
 

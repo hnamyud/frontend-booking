@@ -1,5 +1,6 @@
 <script>
     import { onMount } from "svelte";
+    import { auth } from "../../stores/auth";
     import { api } from "../../api.svelte";
     import {
         Search,
@@ -11,6 +12,7 @@
         User,
         CreditCard,
         AlertCircle,
+        QrCode,
     } from "lucide-svelte";
     import BookingModal from "./BookingModal.svelte";
 
@@ -48,6 +50,26 @@
             // Implement toast notification here if available
         } finally {
             loading = false;
+        }
+    }
+
+    async function handleCheckin() {
+        // Use prompt for simplicity or implement a custom modal
+        const ticketCode = prompt("Please enter the ticket code:");
+        if (!ticketCode) return;
+
+        try {
+            const response = await api.verifyTicket(ticketCode);
+            // Assuming response structure: { statusCode: 201, message: "...", data: { valid: true, message: "..." } }
+            if (response.data && response.data.valid) {
+                alert(`✅ ${response.data.message}`);
+                loadBookings(pagination.current); // Refresh list
+            } else {
+                alert(`❌ ${response.data.message || "Invalid ticket"}`);
+            }
+        } catch (error) {
+            console.error("Check-in failed:", error);
+            alert("❌ Check-in failed: " + (error.message || "Unknown error"));
         }
     }
 
@@ -126,6 +148,15 @@
     <div class="flex justify-between items-center">
         <h2 class="text-xl font-bold text-slate-800">Booking Management</h2>
         <div class="flex gap-3">
+            {#if $auth.isModerator}
+                <button
+                    on:click={handleCheckin}
+                    class="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+                >
+                    <QrCode size={18} />
+                    Check-in
+                </button>
+            {/if}
             <button
                 on:click={() => loadBookings(pagination.current)}
                 class="px-4 py-2 text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors font-medium"
@@ -229,15 +260,17 @@
                                     >
                                         <Edit2 size={18} />
                                     </button>
-                                    <button
-                                        on:click={() =>
-                                            handleDelete(booking._id)}
-                                        class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                        title="Delete"
-                                        aria-label="Delete booking"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                    {#if $auth.isAdmin}
+                                        <button
+                                            on:click={() =>
+                                                handleDelete(booking._id)}
+                                            class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Delete"
+                                            aria-label="Delete booking"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    {/if}
                                 </div>
                             </td>
                         </tr>

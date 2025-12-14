@@ -18,6 +18,7 @@
             const data = await api.login(email, password);
             const { access_token, user } = data.data;
             let isAdmin = false;
+            let isModerator = false;
             let adminPermissions = [];
 
             // Check if user is ADMIN and verify
@@ -38,11 +39,35 @@
                     }
                 } catch (verifyErr) {
                     console.error("Admin verification failed", verifyErr);
-                    // Continue as normal user if verification fails
+                }
+            } else if (user.role === "MODERATOR") {
+                try {
+                    const verifyData = await api.request(
+                        "/api/v1/auth/verify-moderator",
+                        "POST",
+                        undefined,
+                        {
+                            Authorization: `Bearer ${access_token}`,
+                        },
+                    );
+
+                    if (verifyData.data.verified) {
+                        isModerator = true;
+                        // Moderator might have permissions too, but for now we'll assume basic moderator check
+                        // adminPermissions = verifyData.data.permissions;
+                    }
+                } catch (verifyErr) {
+                    console.error("Moderator verification failed", verifyErr);
                 }
             }
 
-            auth.login(access_token, user, isAdmin, adminPermissions);
+            auth.login(
+                access_token,
+                user,
+                isAdmin,
+                isModerator,
+                adminPermissions,
+            );
             window.location.href = "/";
         } catch (err) {
             console.error(err);

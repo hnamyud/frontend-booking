@@ -9,6 +9,7 @@
     import Profile from "./lib/pages/Profile.svelte";
     import ForgotPassword from "./lib/pages/ForgotPassword.svelte";
     import AdminDashboard from "./lib/pages/AdminDashboard.svelte";
+    import ModeratorDashboard from "./lib/pages/ModeratorDashboard.svelte";
     import UserTours from "./lib/pages/UserTours.svelte";
     import TourDetail from "./lib/pages/TourDetail.svelte";
     import Booking from "./lib/pages/Booking.svelte";
@@ -96,6 +97,8 @@
     <ForgotPassword />
 {:else if currentPath === "/admin"}
     <AdminDashboard />
+{:else if currentPath === "/moderator"}
+    <ModeratorDashboard />
 {:else if currentPath === "/tours"}
     <UserTours />
 {:else if /^\/tours\/[a-zA-Z0-9]+$/.test(currentPath)}
@@ -181,6 +184,16 @@
                                     class="text-slate-600 hover:text-emerald-600 font-medium transition-colors mr-2"
                                 >
                                     Admin Dashboard
+                                </a>
+                            {/if}
+                            {#if $auth.isModerator}
+                                <a
+                                    href="/moderator"
+                                    on:click|preventDefault={() =>
+                                        navigate("/moderator")}
+                                    class="text-slate-600 hover:text-emerald-600 font-medium transition-colors mr-2"
+                                >
+                                    Moderator Dashboard
                                 </a>
                             {/if}
                             <a
@@ -278,6 +291,16 @@
                                         class="text-slate-600 hover:text-emerald-600 font-medium py-2"
                                     >
                                         Admin Dashboard
+                                    </a>
+                                {/if}
+                                {#if $auth.isModerator}
+                                    <a
+                                        href="/moderator"
+                                        on:click|preventDefault={() =>
+                                            navigate("/moderator")}
+                                        class="text-slate-600 hover:text-emerald-600 font-medium py-2"
+                                    >
+                                        Moderator Dashboard
                                     </a>
                                 {/if}
                                 <a

@@ -7,27 +7,30 @@ function createAuthStore() {
         user: null,
         token: null,
         isAdmin: false,
+        isModerator: false,
         adminPermissions: []
     });
 
     return {
         subscribe,
-        login: (token, user, isAdmin = false, adminPermissions = []) => {
+        login: (token, user, isAdmin = false, isModerator = false, adminPermissions = []) => {
             // Save to localStorage for persistence across tabs
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('accessToken', token);
             localStorage.setItem('isAdmin', JSON.stringify(isAdmin));
+            localStorage.setItem('isModerator', JSON.stringify(isModerator));
             localStorage.setItem('adminPermissions', JSON.stringify(adminPermissions));
 
-            set({ isAuthenticated: true, user, token, isAdmin, adminPermissions });
+            set({ isAuthenticated: true, user, token, isAdmin, isModerator, adminPermissions });
         },
         logout: async () => {
             // Optimistic UI: Clear state immediately
             localStorage.removeItem('accessToken');
             localStorage.removeItem('user');
             localStorage.removeItem('isAdmin');
+            localStorage.removeItem('isModerator');
             localStorage.removeItem('adminPermissions');
-            set({ isAuthenticated: false, user: null, token: null, isAdmin: false, adminPermissions: [] });
+            set({ isAuthenticated: false, user: null, token: null, isAdmin: false, isModerator: false, adminPermissions: [] });
 
             // Soft navigation to home page (avoids hard reload)
             window.history.pushState({}, '', '/');
@@ -54,19 +57,15 @@ function createAuthStore() {
                     const data = await response.json();
                     const { access_token, user } = data.data;
 
-                    // Restore admin state from localStorage if available
-                    // Note: In a real app, we might want to re-verify admin status here, 
-                    // but for now we'll trust localStorage or just user role if we wanted to be simpler.
-                    // However, the prompt specifically asked for the verify-admin flow on login.
-                    // For refresh, we'll assume the session is still valid. 
-                    // Better yet, let's just read from localStorage what we saved during login.
+                    // Restore admin/moderator state from localStorage
                     const isAdmin = JSON.parse(localStorage.getItem('isAdmin') || 'false');
+                    const isModerator = JSON.parse(localStorage.getItem('isModerator') || 'false');
                     const adminPermissions = JSON.parse(localStorage.getItem('adminPermissions') || '[]');
 
                     // Update state
                     localStorage.setItem('accessToken', access_token);
                     localStorage.setItem('user', JSON.stringify(user));
-                    set({ isAuthenticated: true, user, token: access_token, isAdmin, adminPermissions });
+                    set({ isAuthenticated: true, user, token: access_token, isAdmin, isModerator, adminPermissions });
                 } else {
                     // If refresh fails (401/403), clear state
                     throw new Error('Refresh failed');
@@ -76,8 +75,9 @@ function createAuthStore() {
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('user');
                 localStorage.removeItem('isAdmin');
+                localStorage.removeItem('isModerator');
                 localStorage.removeItem('adminPermissions');
-                set({ isAuthenticated: false, user: null, token: null, isAdmin: false, adminPermissions: [] });
+                set({ isAuthenticated: false, user: null, token: null, isAdmin: false, isModerator: false, adminPermissions: [] });
             }
         }
     };

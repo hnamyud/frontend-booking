@@ -10,6 +10,7 @@
         CreditCard,
         Settings,
         LayoutDashboard,
+        User,
     } from "lucide-svelte";
     import DestinationsTab from "../components/admin/DestinationsTab.svelte";
     import UsersTab from "../components/admin/UsersTab.svelte";
@@ -18,10 +19,11 @@
     import PaymentsTab from "../components/admin/PaymentsTab.svelte";
     import ReviewsTab from "../components/admin/ReviewsTab.svelte";
 
-    let activeTab = "users";
+    let activeTab = "bookings"; // Default to bookings for moderators usually
 
     onMount(() => {
-        if (!$auth.isAuthenticated || !$auth.isAdmin) {
+        // Must be authenticated and either Admin or Moderator
+        if (!$auth.isAuthenticated || (!$auth.isAdmin && !$auth.isModerator)) {
             window.location.href = "/";
         }
     });
@@ -42,7 +44,7 @@
         <div class="p-6 border-b border-slate-100">
             <div class="flex items-center gap-2 text-emerald-600">
                 <LayoutDashboard size={24} />
-                <span class="text-xl font-bold">Admin Panel</span>
+                <span class="text-xl font-bold">Mod Panel</span>
             </div>
         </div>
 
@@ -70,7 +72,7 @@
                     {activeTab} Management
                 </h1>
                 <p class="text-slate-500">
-                    Manage your system {activeTab} here.
+                    Manage system {activeTab} here.
                 </p>
             </div>
             <div class="flex items-center gap-4">
@@ -78,12 +80,18 @@
                     <div class="font-medium text-slate-800">
                         {$auth.user?.name}
                     </div>
-                    <div class="text-sm text-emerald-600">Administrator</div>
+                    <div class="text-sm text-emerald-600">
+                        {#if $auth.isAdmin}Administrator{/if}
+                        {#if $auth.isAdmin && $auth.isModerator}
+                            &
+                        {/if}
+                        {#if $auth.isModerator}Moderator{/if}
+                    </div>
                 </div>
                 <div
                     class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold"
                 >
-                    {$auth.user?.name?.[0] || "A"}
+                    {$auth.user?.name?.[0] || "M"}
                 </div>
             </div>
         </header>

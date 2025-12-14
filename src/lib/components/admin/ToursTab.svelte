@@ -105,13 +105,15 @@
 <div class="space-y-6">
     <div class="flex justify-between items-center">
         <h3 class="text-lg font-semibold text-slate-800">Tour List</h3>
-        <button
-            on:click={openCreateModal}
-            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-            <Plus size={18} />
-            <span>Add Tour</span>
-        </button>
+        {#if $auth.isAdmin}
+            <button
+                on:click={openCreateModal}
+                class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+            >
+                <Plus size={18} />
+                <span>Add Tour</span>
+            </button>
+        {/if}
     </div>
 
     {#if isLoading}
@@ -207,18 +209,21 @@
                             </td>
                             <td class="py-4 px-4">
                                 <div class="flex justify-end gap-2">
-                                    <button
-                                        on:click={() => openEditModal(tour)}
-                                        class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                                    >
-                                        <Pencil size={18} />
-                                    </button>
-                                    <button
-                                        on:click={() => handleDelete(tour._id)}
-                                        class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                    {#if $auth.isAdmin}
+                                        <button
+                                            on:click={() => openEditModal(tour)}
+                                            class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                        >
+                                            <Pencil size={18} />
+                                        </button>
+                                        <button
+                                            on:click={() =>
+                                                handleDelete(tour._id)}
+                                            class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    {/if}
                                 </div>
                             </td>
                         </tr>

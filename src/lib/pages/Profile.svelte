@@ -13,6 +13,12 @@
         X,
         Lock,
         ArrowLeft,
+        Clock,
+        CreditCard,
+        ChevronLeft,
+        ChevronRight,
+        Ticket,
+        History,
     } from "lucide-svelte";
     import { fade } from "svelte/transition";
 
@@ -224,6 +230,100 @@
         };
     }
 
+    // Bookings & Payments State
+    let bookings = [];
+    let bookingsMeta = { current: 1, pageSize: 5, total: 0, pages: 1 };
+    let isBookingsLoading = false;
+
+    let payments = [];
+    let paymentsMeta = { current: 1, pageSize: 5, total: 0, pages: 1 };
+    let isPaymentsLoading = false;
+
+    // Fetch Bookings
+    async function fetchUserBookings(page = 1) {
+        if (isBookingsLoading) return;
+        isBookingsLoading = true;
+        try {
+            const token = localStorage.getItem("accessToken");
+            if (!token) return;
+
+            // Manually constructing URL to use the specific user endpoint if needed,
+            // but api.getUserBookings handles it.
+            const response = await api.getUserBookings({
+                current: page,
+                pageSize: 5,
+            });
+
+            if (response?.data) {
+                bookings = response.data.result;
+                bookingsMeta = response.data.meta;
+            }
+        } catch (err) {
+            console.error("Failed to fetch bookings:", err);
+        } finally {
+            isBookingsLoading = false;
+        }
+    }
+
+    // Fetch Payments
+    async function fetchUserPayments(page = 1) {
+        if (isPaymentsLoading) return;
+        isPaymentsLoading = true;
+        try {
+            const token = localStorage.getItem("accessToken");
+            if (!token) return;
+
+            const response = await api.getUserPayments({
+                current: page,
+                pageSize: 5,
+            });
+
+            if (response?.data) {
+                payments = response.data.result;
+                paymentsMeta = response.data.meta;
+            }
+        } catch (err) {
+            console.error("Failed to fetch payments:", err);
+        } finally {
+            isPaymentsLoading = false;
+        }
+    }
+
+    // Helper for currency format
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat("vi-VN", {
+            style: "currency",
+            currency: "VND",
+        }).format(amount);
+    }
+
+    // Helper for status translation
+    function translateStatus(status) {
+        const map = {
+            PENDING: "Chờ xác nhận",
+            CONFIRMED: "Đã xác nhận",
+            CANCELLED: "Đã hủy",
+            EXPIRED: "Hết hạn",
+            FAILED: "Thất bại",
+            COMPLETED: "Hoàn thành",
+            SUCCESS: "Thành công",
+        };
+        return map[status] || status;
+    }
+
+    function getStatusColor(status) {
+        const map = {
+            PENDING: "bg-yellow-100 text-yellow-700",
+            CONFIRMED: "bg-green-100 text-green-700",
+            SUCCESS: "bg-green-100 text-green-700",
+            CANCELLED: "bg-red-100 text-red-700",
+            EXPIRED: "bg-gray-100 text-gray-700",
+            FAILED: "bg-red-100 text-red-700",
+            COMPLETED: "bg-blue-100 text-blue-700",
+        };
+        return map[status] || "bg-gray-100 text-gray-700";
+    }
+
     onMount(async () => {
         if (!$auth.isAuthenticated) {
             window.location.href = "/login";
@@ -231,6 +331,10 @@
         }
 
         await fetchUserProfile();
+        // Load additional data
+        fetchUserBookings();
+        fetchUserPayments();
+
         isLoading = false;
     });
 </script>
@@ -568,6 +672,243 @@
                     {/if}
                 </div>
             </div>
+
+            <!-- Booking History Section -->
+            <div
+                class="mt-8 bg-white rounded-3xl shadow-xl overflow-hidden p-8"
+            >
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
+                        <Ticket size={24} />
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">
+                        Lịch sử đặt tour
+                    </h2>
+                </div>
+
+                {#if isBookingsLoading && bookings.length === 0}
+                    <div class="flex justify-center p-8">
+                        <Loader2
+                            class="w-8 h-8 text-emerald-600 animate-spin"
+                        />
+                    </div>
+                {:else if bookings.length > 0}
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="text-slate-500 text-sm border-b border-slate-100"
+                                >
+                                    <th class="py-4 font-medium"
+                                        >Mã Tour / Ngày đi</th
+                                    >
+                                    <th class="py-4 font-medium">Khách</th>
+                                    <th class="py-4 font-medium">Tổng tiền</th>
+                                    <th class="py-4 font-medium">Trạng thái</th>
+                                    <th class="py-4 font-medium">Ngày đặt</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                {#each bookings as booking}
+                                    <tr
+                                        class="hover:bg-slate-50 transition-colors text-sm"
+                                    >
+                                        <td class="py-4 pr-4">
+                                            {#if booking.ticketCode}
+                                                <div
+                                                    class="font-medium text-slate-900"
+                                                >
+                                                    {booking.ticketCode}
+                                                </div>
+                                                {#if booking.startDate}
+                                                    <div
+                                                        class="text-xs text-slate-500 mt-1"
+                                                    >
+                                                        Khởi hành: {formatDate(
+                                                            booking.startDate,
+                                                        )}
+                                                    </div>
+                                                {/if}
+                                            {:else}
+                                                <span
+                                                    class="text-slate-400 italic"
+                                                    >Không khả dụng</span
+                                                >
+                                            {/if}
+                                        </td>
+
+                                        <td class="py-4 text-slate-600">
+                                            {booking.numberOfGuests} người
+                                        </td>
+                                        <td
+                                            class="py-4 font-medium text-emerald-600"
+                                        >
+                                            {formatCurrency(booking.totalPrice)}
+                                        </td>
+                                        <td class="py-4">
+                                            <span
+                                                class={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(booking.status)}`}
+                                            >
+                                                {translateStatus(
+                                                    booking.status,
+                                                )}
+                                            </span>
+                                        </td>
+                                        <td class="py-4 text-slate-500">
+                                            {formatDate(booking.createdAt)}
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    {#if bookingsMeta.pages > 1}
+                        <div
+                            class="flex justify-center items-center gap-4 mt-6"
+                        >
+                            <button
+                                disabled={bookingsMeta.current === 1}
+                                on:click={() =>
+                                    fetchUserBookings(bookingsMeta.current - 1)}
+                                class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
+                            >
+                                <ChevronLeft size={20} class="text-slate-600" />
+                            </button>
+                            <span class="text-sm font-medium text-slate-600">
+                                Trang {bookingsMeta.current} / {bookingsMeta.pages}
+                            </span>
+                            <button
+                                disabled={bookingsMeta.current ===
+                                    bookingsMeta.pages}
+                                on:click={() =>
+                                    fetchUserBookings(bookingsMeta.current + 1)}
+                                class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
+                            >
+                                <ChevronRight
+                                    size={20}
+                                    class="text-slate-600"
+                                />
+                            </button>
+                        </div>
+                    {/if}
+                {:else}
+                    <div class="text-center py-8 text-slate-500 italic">
+                        Bạn chưa có lịch sử đặt tour nào.
+                    </div>
+                {/if}
+            </div>
+
+            <!-- Payment History Section -->
+            <div
+                class="mt-8 bg-white rounded-3xl shadow-xl overflow-hidden p-8"
+            >
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
+                        <History size={24} />
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">
+                        Lịch sử thanh toán
+                    </h2>
+                </div>
+
+                {#if isPaymentsLoading && payments.length === 0}
+                    <div class="flex justify-center p-8">
+                        <Loader2
+                            class="w-8 h-8 text-emerald-600 animate-spin"
+                        />
+                    </div>
+                {:else if payments.length > 0}
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr
+                                    class="text-slate-500 text-sm border-b border-slate-100"
+                                >
+                                    <th class="py-4 font-medium"
+                                        >Mã Giao Dịch</th
+                                    >
+                                    <th class="py-4 font-medium"
+                                        >Cổng thanh toán</th
+                                    >
+                                    <th class="py-4 font-medium">Số tiền</th>
+                                    <th class="py-4 font-medium">Trạng thái</th>
+                                    <th class="py-4 font-medium"
+                                        >Ngày thanh toán</th
+                                    >
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                {#each payments as payment}
+                                    <tr
+                                        class="hover:bg-slate-50 transition-colors text-sm"
+                                    >
+                                        <td
+                                            class="py-4 pr-4 font-medium text-slate-900"
+                                        >
+                                            {payment.code}
+                                        </td>
+                                        <td class="py-4 text-slate-600">
+                                            {payment.provider}
+                                        </td>
+                                        <td
+                                            class="py-4 font-medium text-emerald-600"
+                                        >
+                                            {formatCurrency(payment.amount)}
+                                        </td>
+                                        <td class="py-4">
+                                            <span
+                                                class={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(payment.status)}`}
+                                            >
+                                                {translateStatus(
+                                                    payment.status,
+                                                )}
+                                            </span>
+                                        </td>
+                                        <td class="py-4 text-slate-500">
+                                            {formatDate(payment.createdAt)}
+                                        </td>
+                                    </tr>
+                                {/each}
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination -->
+                    {#if paymentsMeta.pages > 1}
+                        <div
+                            class="flex justify-center items-center gap-4 mt-6"
+                        >
+                            <button
+                                disabled={paymentsMeta.current === 1}
+                                on:click={() =>
+                                    fetchUserPayments(paymentsMeta.current - 1)}
+                                class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
+                            >
+                                <ChevronLeft size={20} class="text-slate-600" />
+                            </button>
+                            <span class="text-sm font-medium text-slate-600">
+                                Trang {paymentsMeta.current} / {paymentsMeta.pages}
+                            </span>
+                            <button
+                                disabled={paymentsMeta.current ===
+                                    paymentsMeta.pages}
+                                on:click={() =>
+                                    fetchUserPayments(paymentsMeta.current + 1)}
+                                class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
+                            >
+                                <ChevronRight
+                                    size={20}
+                                    class="text-slate-600"
+                                />
+                            </button>
+                        </div>
+                    {/if}
+                {:else}
+                    <div class="text-center py-8 text-slate-500 italic">
+                        Bạn chưa có lịch sử thanh toán nào.
+                    </div>
+                {/if}
+            </div>
         {/if}
     </div>
 </div>
@@ -577,10 +918,16 @@
     <div
         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
         on:click={() => (showPasswordModal = false)}
+        on:keydown={(e) => e.key === "Escape" && (showPasswordModal = false)}
+        role="button"
+        tabindex="0"
+        aria-label="Close modal"
     >
         <div
             class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8"
             on:click|stopPropagation
+            on:keydown|stopPropagation
+            role="document"
         >
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-2xl font-bold text-slate-900">Đổi mật khẩu</h3>

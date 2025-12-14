@@ -158,6 +158,27 @@ class ApiClient {
     async deletePayment(id: string) {
         return this.request<any>(`/api/v1/payments/${id}`, 'DELETE', undefined, this.getAuthHeaders());
     }
+
+    // User Profile API
+    async getUserBookings(params: GetBookingsParams = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.current) queryParams.append('current', params.current.toString());
+        if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+
+        const queryString = queryParams.toString();
+        const url = `/api/v1/user/bookings${queryString ? `?${queryString}` : ''}`;
+        return this.request<GetBookingsResponse>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async getUserPayments(params: GetPaymentsParams = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.current) queryParams.append('current', params.current.toString());
+        if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+
+        const queryString = queryParams.toString();
+        const url = `/api/v1/user/payments${queryString ? `?${queryString}` : ''}`;
+        return this.request<GetPaymentsResponse>(url, 'GET', undefined, this.getAuthHeaders());
+    }
 }
 
 export interface GetToursParams {
@@ -252,6 +273,8 @@ export interface Booking {
     payment_id?: string;
     ticketCode?: string;
     checkinAt?: string;
+    startDate?: string;
+    endDate?: string;
 }
 
 export interface GetBookingsResponse {

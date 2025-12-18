@@ -16,12 +16,12 @@
     import Payment from "./lib/pages/Payment.svelte";
     import PaymentReturn from "./lib/pages/PaymentReturn.svelte";
     import { onMount } from "svelte";
+    import { api } from "./lib/api.svelte";
     import { auth } from "./lib/stores/auth";
 
     let currentPath = window.location.pathname;
     let isMobileMenuOpen = false;
 
-    // Simple routing
     // Simple routing
     async function navigate(path) {
         if (!document.startViewTransition) {
@@ -40,8 +40,73 @@
         });
     }
 
-    onMount(() => {
-        auth.init(); // Initialize auth state (check refresh token)
+    onMount(async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get("token");
+
+        if (token) {
+            try {
+                // Determine roles and permissions
+                const userResponse = await api.request(
+                    "/api/v1/auth/account",
+                    "GET",
+                    undefined,
+                    { Authorization: `Bearer ${token}` },
+                );
+                const user = userResponse.data;
+
+                let isAdmin = false;
+                let isModerator = false;
+                let adminPermissions = [];
+
+                if (user.role === "ADMIN") {
+                    try {
+                        const verifyData = await api.request(
+                            "/api/v1/auth/verify-admin",
+                            "POST",
+                            undefined,
+                            { Authorization: `Bearer ${token}` },
+                        );
+                        if (verifyData.data.verified) {
+                            isAdmin = true;
+                            adminPermissions = verifyData.data.permissions;
+                        }
+                    } catch (e) {
+                        console.error("Admin verify failed", e);
+                    }
+                } else if (user.role === "MODERATOR") {
+                    try {
+                        const verifyData = await api.request(
+                            "/api/v1/auth/verify-moderator",
+                            "POST",
+                            undefined,
+                            { Authorization: `Bearer ${token}` },
+                        );
+                        if (verifyData.data.verified) {
+                            isModerator = true;
+                        }
+                    } catch (e) {
+                        console.error("Moderator verify failed", e);
+                    }
+                }
+
+                auth.login(token, user, isAdmin, isModerator, adminPermissions);
+
+                // Clear query params
+                window.history.replaceState(
+                    {},
+                    document.title,
+                    window.location.pathname,
+                );
+                navigate("/"); // Ensure we are on home or refresh state
+            } catch (error) {
+                console.error("Google login error", error);
+                alert("Đăng nhập Google thất bại: " + error.message);
+                navigate("/login");
+            }
+        } else {
+            auth.init(); // Initialize auth state (check refresh token)
+        }
 
         const handlePopState = () => {
             currentPath = window.location.pathname;

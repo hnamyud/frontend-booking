@@ -15,6 +15,7 @@
     import Booking from "./lib/pages/Booking.svelte";
     import Payment from "./lib/pages/Payment.svelte";
     import PaymentReturn from "./lib/pages/PaymentReturn.svelte";
+    import Destinations from "./lib/pages/Destinations.svelte";
     import { onMount } from "svelte";
     import { api } from "./lib/api.svelte";
     import { auth } from "./lib/stores/auth";
@@ -166,6 +167,8 @@
     <ModeratorDashboard />
 {:else if currentPath === "/tours"}
     <UserTours />
+{:else if currentPath === "/destinations"}
+    <Destinations />
 {:else if /^\/tours\/[a-zA-Z0-9]+$/.test(currentPath)}
     <TourDetail params={{ id: currentPath.split("/").pop() }} />
 {:else if /^\/booking\/[a-zA-Z0-9]+$/.test(currentPath)}
@@ -424,7 +427,8 @@
                     </p>
                 </div>
                 <a
-                    href="#"
+                    href="/destinations"
+                    on:click|preventDefault={() => navigate("/destinations")}
                     class="hidden md:flex items-center gap-2 text-emerald-600 font-bold hover:gap-3 transition-all"
                 >
                     View All <span class="text-xl">→</span>
@@ -438,7 +442,9 @@
             </div>
 
             <div class="mt-8 text-center md:hidden">
-                <button class="text-emerald-600 font-bold hover:underline"
+                <button
+                    on:click={() => navigate("/destinations")}
+                    class="text-emerald-600 font-bold hover:underline"
                     >View All Destinations</button
                 >
             </div>

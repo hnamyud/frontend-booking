@@ -197,6 +197,99 @@ class ApiClient {
     async deleteReview(id: string) {
         return this.request<any>(`/api/v1/review/${id}`, 'DELETE', undefined, this.getAuthHeaders());
     }
+
+    // Destination API
+    async getDestinations(params: GetDestinationsParams = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.current) queryParams.append('current', params.current.toString());
+        if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+        if (params.name) queryParams.append('name', params.name);
+        if (params.destinationName) queryParams.append('destinationName', params.destinationName);
+        if (params.country) queryParams.append('country', params.country);
+
+        const queryString = queryParams.toString();
+        const url = `/api/v1/destination${queryString ? `?${queryString}` : ''}`;
+
+        // Try public access first, or use auth headers if logged in (Client handles logic, strict auth headers is consistently used here)
+        return this.request<GetDestinationsResponse>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async getUserReviews(params: any = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.current) queryParams.append('current', params.current.toString());
+        if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+
+        const queryString = queryParams.toString();
+        const url = `/api/v1/review/user${queryString ? `?${queryString}` : ''}`;
+        return this.request<any>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async createReview(data: any) {
+        return this.request<any>('/api/v1/review', 'POST', data, this.getAuthHeaders());
+    }
+}
+
+export interface Review {
+    _id: string;
+    tour_id: {
+        _id: string;
+        name: string;
+        duration: string;
+        id: string;
+    };
+    user_id: string;
+    booking_id: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GetUserReviewsResponse {
+    statusCode: number;
+    message: string;
+    data: {
+        meta: {
+            current: number;
+            pageSize: number;
+            pages: number;
+            total: number;
+        };
+        result: Review[];
+    };
+}
+
+
+export interface GetDestinationsParams {
+    current?: number;
+    pageSize?: number;
+    name?: string;
+    destinationName?: string;
+    country?: string;
+}
+
+export interface Destination {
+    _id: string;
+    name: string;
+    country: string;
+    description: string;
+    images: { _id: string; url: string; public_id: string }[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GetDestinationsResponse {
+    statusCode: number;
+    message: string;
+    data: {
+        meta: {
+            current: number;
+            pageSize: number;
+            pages: number;
+            total: number;
+        };
+        result: Destination[];
+    };
 }
 
 export interface GetToursParams {
@@ -225,6 +318,16 @@ export interface Tour {
     isAvailable: boolean;
     destinations: any[]; // Define specific type if needed
     images?: { url: string; public_id: string }[];
+    ratingAverage?: number;
+    ratingQuantity?: number;
+    reviews?: {
+        _id: string;
+        tour_id: string;
+        user_id: string;
+        rating: number;
+        comment: string;
+        createdAt: string;
+    }[];
     createdAt: string;
     updatedAt: string;
 }

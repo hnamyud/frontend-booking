@@ -1,5 +1,5 @@
 <script>
-    import { MapPin, Clock } from "lucide-svelte";
+    import { MapPin, Clock, Star } from "lucide-svelte";
 
     export let tour;
 
@@ -70,6 +70,17 @@
         <div class="text-slate-500 text-sm mb-1 line-clamp-1">{tour.name}</div>
         <div class="text-slate-500 text-sm flex items-center gap-2">
             <span>{tour.duration}</span>
+            {#if tour.ratingAverage}
+                <div class="flex items-center gap-1 ml-2">
+                    <Star size={14} class="fill-yellow-400 text-yellow-400" />
+                    <span class="font-bold text-xs text-slate-700"
+                        >{tour.ratingAverage}</span
+                    >
+                    <span class="text-xs text-slate-400"
+                        >({tour.ratingQuantity})</span
+                    >
+                </div>
+            {/if}
         </div>
     </div>
 </div>

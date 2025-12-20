@@ -22,6 +22,8 @@
         sort: "-price", // Default: High to Low
         priceMin: "",
         priceMax: "",
+        timeStart_from: "",
+        timeEnd_to: "",
         current: 1,
         pageSize: 10, // Larger page size for immersive feel
     };
@@ -45,6 +47,9 @@
                 params.destinationName = filters.destinationName;
             if (filters.priceMin) params.priceMin = Number(filters.priceMin);
             if (filters.priceMax) params.priceMax = Number(filters.priceMax);
+            if (filters.timeStart_from)
+                params.timeStart_from = filters.timeStart_from;
+            if (filters.timeEnd_to) params.timeEnd_to = filters.timeEnd_to;
 
             const response = await api.getTours(params);
             tours = response.data.result;
@@ -167,6 +172,8 @@
                         filters.destinationName = "";
                         filters.priceMin = "";
                         filters.priceMax = "";
+                        filters.timeStart_from = "";
+                        filters.timeEnd_to = "";
                         fetchTours();
                     }}
                     class="mt-6 px-6 py-2.5 bg-slate-900 text-white rounded-full font-medium hover:bg-black transition-all"
@@ -225,6 +232,8 @@
         filters={{
             priceMin: filters.priceMin,
             priceMax: filters.priceMax,
+            timeStart_from: filters.timeStart_from,
+            timeEnd_to: filters.timeEnd_to,
             sort: filters.sort,
         }}
         on:close={() => (isFilterOpen = false)}

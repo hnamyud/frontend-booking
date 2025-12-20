@@ -7,6 +7,8 @@
         priceMin: "",
         priceMax: "",
         sort: "-price", // Default sort
+        timeStart_from: "",
+        timeEnd_to: "",
     };
 
     const dispatch = createEventDispatcher();
@@ -20,6 +22,8 @@
             priceMin: "",
             priceMax: "",
             sort: "-price",
+            timeStart_from: "",
+            timeEnd_to: "",
         };
         dispatch("apply", filters);
     }
@@ -116,6 +120,30 @@
                                 bind:value={filters.priceMax}
                                 placeholder="Any"
                                 class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <h4 class="font-semibold text-slate-900">Departure Date</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs text-slate-500 ml-1"
+                                >From</label
+                            >
+                            <input
+                                type="date"
+                                bind:value={filters.timeStart_from}
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm"
+                            />
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs text-slate-500 ml-1">To</label
+                            >
+                            <input
+                                type="date"
+                                bind:value={filters.timeEnd_to}
+                                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none transition-all text-sm"
                             />
                         </div>
                     </div>

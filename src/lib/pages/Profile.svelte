@@ -1,5 +1,6 @@
 <script>
     import { onMount } from "svelte";
+    import ReviewModal from "../components/user/ReviewModal.svelte";
     import { auth } from "../stores/auth";
     import {
         User,
@@ -19,6 +20,8 @@
         ChevronRight,
         Ticket,
         History,
+        Star,
+        MessageSquare,
     } from "lucide-svelte";
     import { fade } from "svelte/transition";
 
@@ -239,6 +242,25 @@
     let paymentsMeta = { current: 1, pageSize: 5, total: 0, pages: 1 };
     let isPaymentsLoading = false;
 
+    // Review State
+    let showReviewModal = false;
+    let selectedBookingForReview = null;
+    let reviews = [];
+    let reviewsMeta = { current: 1, pageSize: 5, total: 0, pages: 1 };
+    let isReviewsLoading = false;
+
+    function handleOpenReview(booking) {
+        selectedBookingForReview = booking;
+        showReviewModal = true;
+    }
+
+    function handleReviewSubmit() {
+        // Refresh reviews and show success
+        fetchUserReviews();
+        successMessage = "Gửi đánh giá thành công!";
+        setTimeout(() => (successMessage = ""), 3000);
+    }
+
     // Fetch Bookings
     async function fetchUserBookings(page = 1) {
         if (isBookingsLoading) return;
@@ -289,6 +311,30 @@
         }
     }
 
+    // Fetch Reviews
+    async function fetchUserReviews(page = 1) {
+        if (isReviewsLoading) return;
+        isReviewsLoading = true;
+        try {
+            const token = localStorage.getItem("accessToken");
+            if (!token) return;
+
+            const response = await api.getUserReviews({
+                current: page,
+                pageSize: 5,
+            });
+
+            if (response?.data) {
+                reviews = response.data.result;
+                reviewsMeta = response.data.meta;
+            }
+        } catch (err) {
+            console.error("Failed to fetch reviews:", err);
+        } finally {
+            isReviewsLoading = false;
+        }
+    }
+
     // Helper for currency format
     function formatCurrency(amount) {
         return new Intl.NumberFormat("vi-VN", {
@@ -334,6 +380,7 @@
         // Load additional data
         fetchUserBookings();
         fetchUserPayments();
+        fetchUserReviews();
 
         isLoading = false;
     });
@@ -753,6 +800,17 @@
                                                     booking.status,
                                                 )}
                                             </span>
+                                            {#if booking.status === "COMPLETED"}
+                                                <button
+                                                    on:click={() =>
+                                                        handleOpenReview(
+                                                            booking,
+                                                        )}
+                                                    class="ml-2 text-xs font-semibold text-emerald-600 hover:text-emerald-700 underline"
+                                                >
+                                                    Đánh giá
+                                                </button>
+                                            {/if}
                                         </td>
                                         <td class="py-4 text-slate-500">
                                             {formatDate(booking.createdAt)}
@@ -798,6 +856,117 @@
                     </div>
                 {/if}
             </div>
+
+            <!-- Review History Section -->
+            <div
+                class="mt-8 bg-white rounded-3xl shadow-xl overflow-hidden p-8"
+            >
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="p-2 bg-yellow-100 text-yellow-600 rounded-lg">
+                        <MessageSquare size={24} />
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">
+                        Lịch sử đánh giá
+                    </h2>
+                </div>
+
+                {#if isReviewsLoading && reviews.length === 0}
+                    <div class="flex justify-center p-8">
+                        <Loader2
+                            class="w-8 h-8 text-emerald-600 animate-spin"
+                        />
+                    </div>
+                {:else if reviews.length > 0}
+                    <div class="space-y-4">
+                        {#each reviews as review}
+                            <div
+                                class="p-4 bg-slate-50 rounded-xl border border-slate-100"
+                            >
+                                <div
+                                    class="flex justify-between items-start mb-2"
+                                >
+                                    <div>
+                                        <h3 class="font-bold text-slate-900">
+                                            {review.tour_id?.name ||
+                                                "Unknown Tour"}
+                                        </h3>
+                                        <div
+                                            class="text-xs text-slate-500 mt-1"
+                                        >
+                                            {formatDate(review.createdAt)} • {review
+                                                .tour_id?.duration || ""}
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-200"
+                                    >
+                                        <Star
+                                            size={14}
+                                            class="fill-yellow-400 text-yellow-400"
+                                        />
+                                        <span
+                                            class="font-bold text-sm text-slate-700"
+                                            >{review.rating}</span
+                                        >
+                                    </div>
+                                </div>
+                                {#if review.comment}
+                                    <p
+                                        class="text-slate-600 text-sm mt-3 bg-white p-3 rounded-lg border border-slate-100 italic"
+                                    >
+                                        "{review.comment}"
+                                    </p>
+                                {/if}
+                            </div>
+                        {/each}
+                    </div>
+
+                    <!-- Pagination -->
+                    {#if reviewsMeta.pages > 1}
+                        <div
+                            class="flex justify-center items-center gap-4 mt-6"
+                        >
+                            <button
+                                disabled={reviewsMeta.current === 1}
+                                on:click={() =>
+                                    fetchUserReviews(reviewsMeta.current - 1)}
+                                class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
+                            >
+                                <ChevronLeft size={20} class="text-slate-600" />
+                            </button>
+                            <span class="text-sm font-medium text-slate-600">
+                                Trang {reviewsMeta.current} / {reviewsMeta.pages}
+                            </span>
+                            <button
+                                disabled={reviewsMeta.current ===
+                                    reviewsMeta.pages}
+                                on:click={() =>
+                                    fetchUserReviews(reviewsMeta.current + 1)}
+                                class="p-2 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-50 disabled:hover:bg-white transition-colors"
+                            >
+                                <ChevronRight
+                                    size={20}
+                                    class="text-slate-600"
+                                />
+                            </button>
+                        </div>
+                    {/if}
+                {:else}
+                    <div class="text-center py-8 text-slate-500 italic">
+                        Bạn chưa có đánh giá nào.
+                    </div>
+                {/if}
+            </div>
+
+            <!-- Modals -->
+            <ReviewModal
+                isOpen={showReviewModal}
+                bookingId={selectedBookingForReview?._id}
+                tourId={selectedBookingForReview?.tour_id}
+                tourName={selectedBookingForReview?.tour_name}
+                on:close={() => (showReviewModal = false)}
+                on:submit={handleReviewSubmit}
+            />
 
             <!-- Payment History Section -->
             <div

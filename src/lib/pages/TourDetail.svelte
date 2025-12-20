@@ -403,6 +403,77 @@
                             </li>
                         </ul>
                     </div>
+
+                    <!-- Reviews Section -->
+                    {#if tour.reviews && tour.reviews.length > 0}
+                        <div>
+                            <h3
+                                class="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2"
+                            >
+                                Reviews
+                                <span
+                                    class="text-sm font-normal text-slate-500 bg-slate-100 px-2 py-1 rounded-full"
+                                >
+                                    {tour.reviews.length}
+                                </span>
+                            </h3>
+                            <div class="grid gap-6">
+                                {#each tour.reviews as review}
+                                    <div class="bg-slate-50 p-6 rounded-2xl">
+                                        <div
+                                            class="flex items-center justify-between mb-4"
+                                        >
+                                            <div
+                                                class="flex items-center gap-3"
+                                            >
+                                                <div
+                                                    class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold"
+                                                >
+                                                    {review.user_id?.name
+                                                        ?.charAt(0)
+                                                        .toUpperCase() || "U"}
+                                                </div>
+                                                <div>
+                                                    <div
+                                                        class="font-bold text-slate-900"
+                                                    >
+                                                        {review.user_id?.name ||
+                                                            "User"}
+                                                    </div>
+                                                    <div
+                                                        class="text-xs text-slate-500"
+                                                    >
+                                                        {new Date(
+                                                            review.createdAt,
+                                                        ).toLocaleDateString(
+                                                            "vi-VN",
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg shadow-sm"
+                                            >
+                                                <Star
+                                                    size={14}
+                                                    class="fill-yellow-400 text-yellow-400"
+                                                />
+                                                <span
+                                                    class="font-bold text-sm text-slate-900"
+                                                    >{review.rating}</span
+                                                >
+                                            </div>
+                                        </div>
+                                        <p
+                                            class="text-slate-600 leading-relaxed"
+                                        >
+                                            {review.comment}
+                                        </p>
+                                    </div>
+                                {/each}
+                            </div>
+                        </div>
+                    {/if}
                 </div>
 
                 <!-- Right Sidebar (Sticky) -->

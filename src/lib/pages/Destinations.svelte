@@ -124,9 +124,19 @@
                         class="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 h-full flex flex-col border border-slate-100 cursor-pointer outline-none focus:ring-2 focus:ring-emerald-500"
                         on:mouseenter={() => (hoveredIndex = index)}
                         on:mouseleave={() => (hoveredIndex = -1)}
+                        on:click={() =>
+                            window.dispatchEvent(
+                                new CustomEvent("app:navigate", {
+                                    detail: `/destinations/${destination._id}`,
+                                }),
+                            )}
                         on:keydown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
-                                /* Navigate */
+                                window.dispatchEvent(
+                                    new CustomEvent("app:navigate", {
+                                        detail: `/destinations/${destination._id}`,
+                                    }),
+                                );
                             }
                         }}
                     >
@@ -219,8 +229,13 @@
                             <!-- Button -->
                             <button
                                 class="w-full py-3 bg-slate-50 text-slate-700 font-bold rounded-xl hover:bg-emerald-600 hover:text-white transition-all duration-300"
-                                on:click={() => {
-                                    /* Navigate to detail if needed */
+                                on:click={(e) => {
+                                    e.stopPropagation();
+                                    window.dispatchEvent(
+                                        new CustomEvent("app:navigate", {
+                                            detail: `/destinations/${destination._id}`,
+                                        }),
+                                    );
                                 }}
                             >
                                 Xem chi tiết

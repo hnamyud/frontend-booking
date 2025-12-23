@@ -214,6 +214,10 @@ class ApiClient {
         return this.request<GetDestinationsResponse>(url, 'GET', undefined, this.getAuthHeaders());
     }
 
+    async getDestination(id: string) {
+        return this.request<any>(`/api/v1/destination/${id}`, 'GET', undefined, this.getAuthHeaders());
+    }
+
     async getUserReviews(params: any = {}) {
         const queryParams = new URLSearchParams();
         if (params.current) queryParams.append('current', params.current.toString());

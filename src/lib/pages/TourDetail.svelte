@@ -18,6 +18,7 @@
         ChevronLeft,
     } from "lucide-svelte";
     import { fade, fly } from "svelte/transition";
+    import ErrorPage from "./ErrorPage.svelte";
     import { auth } from "../stores/auth";
 
     export let params = {}; // Will receive id from manual router logic
@@ -33,7 +34,7 @@
 
     // Booking State
     let guests = 1;
-    let selectedDate = "";
+    let selectedDate = new Date().toISOString().split("T")[0];
 
     // Derived
     $: if (params && params.id) tourId = params.id;
@@ -54,12 +55,6 @@
         try {
             const res = await api.getTour(tourId);
             tour = res.data;
-            if (tour.timeStart) {
-                // Initialize input with date string YYYY-MM-DD
-                selectedDate = new Date(tour.timeStart)
-                    .toISOString()
-                    .split("T")[0];
-            }
         } catch (err) {
             console.error(err);
             error = "Could not load tour details.";
@@ -158,16 +153,10 @@
             ></div>
         </div>
     {:else if error || !tour}
-        <div class="container mx-auto px-4 py-20 text-center">
-            <h2 class="text-2xl font-bold text-slate-800 mb-4">
-                {error || "Tour not found"}
-            </h2>
-            <a
-                href="/tours"
-                class="text-emerald-600 font-medium hover:underline"
-                >Back to Tours</a
-            >
-        </div>
+        <ErrorPage
+            isTourError={true}
+            message={error || "Không tìm thấy thông tin tour."}
+        />
     {:else}
         <!-- Hero Gallery -->
         <div class="container mx-auto px-4 pt-6 pb-8">

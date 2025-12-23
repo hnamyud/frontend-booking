@@ -16,6 +16,8 @@
     import Payment from "./lib/pages/Payment.svelte";
     import PaymentReturn from "./lib/pages/PaymentReturn.svelte";
     import Destinations from "./lib/pages/Destinations.svelte";
+    import DestinationDetail from "./lib/pages/DestinationDetail.svelte";
+    import ErrorPage from "./lib/pages/ErrorPage.svelte";
     import { onMount } from "svelte";
     import { api } from "./lib/api.svelte";
     import { auth } from "./lib/stores/auth";
@@ -169,6 +171,8 @@
     <UserTours />
 {:else if currentPath === "/destinations"}
     <Destinations />
+{:else if /^\/destinations\/[a-zA-Z0-9]+$/.test(currentPath)}
+    <DestinationDetail params={{ id: currentPath.split("/").pop() }} />
 {:else if /^\/tours\/[a-zA-Z0-9]+$/.test(currentPath)}
     <TourDetail params={{ id: currentPath.split("/").pop() }} />
 {:else if /^\/booking\/[a-zA-Z0-9]+$/.test(currentPath)}
@@ -177,7 +181,7 @@
     <PaymentReturn />
 {:else if /^\/payment\/[a-zA-Z0-9]+$/.test(currentPath)}
     <Payment params={{ id: currentPath.split("/").pop() }} />
-{:else}
+{:else if currentPath === "/" || currentPath === "/index.html"}
     <div class="min-h-screen bg-slate-50 font-sans text-slate-900">
         <!-- Navigation -->
         <nav
@@ -615,4 +619,6 @@
             </div>
         </footer>
     </div>
+{:else}
+    <ErrorPage />
 {/if}

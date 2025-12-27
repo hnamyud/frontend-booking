@@ -231,6 +231,19 @@ class ApiClient {
     async createReview(data: any) {
         return this.request<any>('/api/v1/review', 'POST', data, this.getAuthHeaders());
     }
+
+    // Statistic API
+    async getRevenueChart() {
+        return this.request<any>('/api/v1/statistic/chart', 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async getOverviewStats() {
+        return this.request<any>('/api/v1/statistic/overview', 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async getTopTours(limit: number = 5) {
+        return this.request<any>(`/api/v1/statistic/top-tours?limit=${limit}`, 'GET', undefined, this.getAuthHeaders());
+    }
 }
 
 export interface Review {

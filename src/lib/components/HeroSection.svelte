@@ -5,6 +5,41 @@
     let location = "";
     let date = "";
     let budget = "";
+
+    function handleSearch() {
+        const params = new URLSearchParams();
+        params.set("current", "1");
+        params.set("pageSize", "10");
+        params.set("sort", "-price");
+
+        if (location) params.set("destinationName", location);
+        if (date) params.set("timeStart_from", date);
+
+        if (budget) {
+            switch (budget) {
+                case "under-5":
+                    params.set("priceMax", "5000000");
+                    break;
+                case "5-10":
+                    params.set("priceMin", "5000000");
+                    params.set("priceMax", "10000000");
+                    break;
+                case "10-20":
+                    params.set("priceMin", "10000000");
+                    params.set("priceMax", "20000000");
+                    break;
+                case "over-20":
+                    params.set("priceMin", "20000000");
+                    break;
+            }
+        }
+
+        window.dispatchEvent(
+            new CustomEvent("app:navigate", {
+                detail: "/tours?" + params.toString(),
+            }),
+        );
+    }
 </script>
 
 <section
@@ -90,6 +125,7 @@
             </div>
 
             <button
+                on:click={handleSearch}
                 class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-emerald-500/30 flex items-center justify-center gap-2"
             >
                 <Search size={20} />

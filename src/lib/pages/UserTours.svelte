@@ -80,6 +80,24 @@
     }
 
     onMount(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.has("destinationName"))
+            filters.destinationName = urlParams.get("destinationName");
+        if (urlParams.has("sort")) filters.sort = urlParams.get("sort");
+        if (urlParams.has("priceMin"))
+            filters.priceMin = urlParams.get("priceMin");
+        if (urlParams.has("priceMax"))
+            filters.priceMax = urlParams.get("priceMax");
+        if (urlParams.has("timeStart_from"))
+            filters.timeStart_from = urlParams.get("timeStart_from");
+        if (urlParams.has("timeEnd_to"))
+            filters.timeEnd_to = urlParams.get("timeEnd_to");
+        if (urlParams.has("current"))
+            filters.current = parseInt(urlParams.get("current"));
+        if (urlParams.has("pageSize"))
+            filters.pageSize = parseInt(urlParams.get("pageSize"));
+
         fetchTours();
     });
 </script>

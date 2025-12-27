@@ -18,8 +18,10 @@
     import BookingsTab from "../components/admin/BookingsTab.svelte";
     import PaymentsTab from "../components/admin/PaymentsTab.svelte";
     import ReviewsTab from "../components/admin/ReviewsTab.svelte";
+    import ModeratorStats from "../components/admin/ModeratorStats.svelte";
+    import { BarChart3 } from "lucide-svelte"; // Icon for Overview
 
-    let activeTab = "bookings"; // Default to bookings for moderators usually
+    let activeTab = "overview"; // Default to overview
 
     onMount(() => {
         // Must be authenticated and either Admin or Moderator
@@ -29,6 +31,7 @@
     });
 
     const tabs = [
+        { id: "overview", label: "Overview", icon: BarChart3 },
         { id: "users", label: "Users", icon: Users },
         { id: "destinations", label: "Destinations", icon: Map },
         { id: "tours", label: "Tours", icon: Compass },
@@ -99,7 +102,9 @@
         <div
             class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 min-h-[500px]"
         >
-            {#if activeTab === "destinations"}
+            {#if activeTab === "overview"}
+                <ModeratorStats />
+            {:else if activeTab === "destinations"}
                 <DestinationsTab />
             {:else if activeTab === "users"}
                 <UsersTab />

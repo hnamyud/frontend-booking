@@ -171,15 +171,15 @@
     <UserTours />
 {:else if currentPath === "/destinations"}
     <Destinations />
-{:else if /^\/destinations\/[a-zA-Z0-9]+$/.test(currentPath)}
+{:else if /^\/destinations\/[^/]+$/.test(currentPath)}
     <DestinationDetail params={{ id: currentPath.split("/").pop() }} />
-{:else if /^\/tours\/[a-zA-Z0-9]+$/.test(currentPath)}
+{:else if /^\/tours\/[^/]+$/.test(currentPath)}
     <TourDetail params={{ id: currentPath.split("/").pop() }} />
-{:else if /^\/booking\/[a-zA-Z0-9]+$/.test(currentPath)}
+{:else if /^\/booking\/[^/]+$/.test(currentPath)}
     <Booking params={{ id: currentPath.split("/").pop() }} />
 {:else if currentPath === "/payments/vnpay-return" || currentPath === "/payment/vnpay-return"}
     <PaymentReturn />
-{:else if /^\/payment\/[a-zA-Z0-9]+$/.test(currentPath)}
+{:else if /^\/payment\/[^/]+$/.test(currentPath)}
     <Payment params={{ id: currentPath.split("/").pop() }} />
 {:else if currentPath === "/" || currentPath === "/index.html"}
     <div class="min-h-screen bg-slate-50 font-sans text-slate-900">

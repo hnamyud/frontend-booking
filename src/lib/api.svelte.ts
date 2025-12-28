@@ -322,6 +322,7 @@ export interface GetToursParams {
 
 export interface Tour {
     _id: string;
+    slug?: string;
     name: string;
     description: string;
     duration: string;
@@ -333,7 +334,8 @@ export interface Tour {
     availableSlots: number;
     bookedParticipants: number;
     isAvailable: boolean;
-    destinations: any[]; // Define specific type if needed
+    destinations: string[];
+    itinerary: { day: number; content: string }[];
     images?: { url: string; public_id: string }[];
     ratingAverage?: number;
     ratingQuantity?: number;
@@ -380,6 +382,7 @@ export interface CreateTourPayload {
     totalSlots: number;
     isAvailable: boolean;
     destinations: string[];
+    itinerary: { day: number; content: string }[];
 }
 
 // Booking Interfaces

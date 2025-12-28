@@ -22,7 +22,9 @@
     class="group cursor-pointer"
     on:click={() =>
         window.dispatchEvent(
-            new CustomEvent("app:navigate", { detail: `/tours/${tour._id}` }),
+            new CustomEvent("app:navigate", {
+                detail: `/tours/${tour.slug || tour._id}`,
+            }),
         )}
 >
     <div class="relative aspect-[4/3] overflow-hidden rounded-xl mb-3">

@@ -21,6 +21,7 @@
     let isAvailable = true;
     let selectedDestinations = [];
     let availableDestinations = [];
+    let itinerary = [];
     let error = "";
 
     $: if (isOpen) {
@@ -40,6 +41,7 @@
             totalSlots = tour.totalSlots;
             isAvailable = tour.isAvailable;
             selectedDestinations = tour.destinations.map((d) => d._id || d);
+            itinerary = tour.itinerary || [];
         } else {
             resetForm();
         }
@@ -56,6 +58,7 @@
         totalSlots = 0;
         isAvailable = true;
         selectedDestinations = [];
+        itinerary = [];
         error = "";
     }
 
@@ -80,6 +83,19 @@
         } else {
             selectedDestinations = [...selectedDestinations, id];
         }
+    }
+
+    function addItineraryDay() {
+        itinerary = [...itinerary, { day: itinerary.length + 1, content: "" }];
+    }
+
+    function removeItineraryDay(index) {
+        itinerary = itinerary.filter((_, i) => i !== index);
+        // Reorder days
+        itinerary = itinerary.map((item, index) => ({
+            ...item,
+            day: index + 1,
+        }));
     }
 
     function handleSubmit() {
@@ -107,6 +123,7 @@
             totalSlots: Number(totalSlots),
             isAvailable,
             destinations: selectedDestinations,
+            itinerary,
         };
 
         dispatch("submit", payload);
@@ -277,6 +294,55 @@
                             bind:value={timeEnd}
                             class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all"
                         />
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-medium text-slate-700"
+                            >Itinerary</label
+                        >
+                        <button
+                            type="button"
+                            on:click={addItineraryDay}
+                            class="text-sm text-emerald-600 hover:text-emerald-700 font-medium hover:underline"
+                        >
+                            + Add Day
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        {#each itinerary as day, i}
+                            <div
+                                class="flex gap-3 items-start p-4 bg-slate-50 rounded-xl border border-slate-100"
+                            >
+                                <div
+                                    class="w-16 pt-3 text-sm font-medium text-slate-500"
+                                >
+                                    Day {day.day}
+                                </div>
+                                <textarea
+                                    bind:value={day.content}
+                                    rows="2"
+                                    class="flex-1 px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 outline-none transition-all resize-none bg-white"
+                                    placeholder={`Activities for Day ${day.day}...`}
+                                ></textarea>
+                                <button
+                                    type="button"
+                                    on:click={() => removeItineraryDay(i)}
+                                    class="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Remove Day"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
+                        {/each}
+                        {#if itinerary.length === 0}
+                            <div
+                                class="text-center py-8 text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200"
+                            >
+                                No itinerary days added yet
+                            </div>
+                        {/if}
                     </div>
                 </div>
 

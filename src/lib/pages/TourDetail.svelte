@@ -160,42 +160,73 @@
     {:else}
         <!-- Hero Gallery -->
         <div class="container mx-auto px-4 pt-6 pb-8">
-            <div
-                class="grid grid-cols-1 md:grid-cols-4 gap-4 h-[400px] md:h-[500px] mb-8"
-            >
-                <!-- Main Image -->
+            <!-- Dynamic Grid based on image count -->
+            {#if displayImages.length === 1}
                 <div
-                    class="md:col-span-2 md:row-span-2 relative rounded-2xl overflow-hidden group cursor-pointer"
+                    class="h-[400px] md:h-[500px] mb-8 rounded-2xl overflow-hidden group cursor-pointer"
                     on:click={() => openGallery(0)}
                 >
                     <img
-                        src={displayImages[0]?.url ||
-                            "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80"}
+                        src={displayImages[0].url}
                         alt="Main"
                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                 </div>
-                <!-- Sub Images -->
-                {#each displayImages.slice(1, 5) as img, i}
+            {:else if displayImages.length === 2}
+                <div
+                    class="grid grid-cols-1 md:grid-cols-2 gap-4 h-[400px] md:h-[500px] mb-8"
+                >
+                    {#each displayImages as img, i}
+                        <div
+                            class="relative rounded-2xl overflow-hidden group cursor-pointer h-full"
+                            on:click={() => openGallery(i)}
+                        >
+                            <img
+                                src={img.url}
+                                alt="Gallery {i}"
+                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                        </div>
+                    {/each}
+                </div>
+            {:else}
+                <div
+                    class="grid grid-cols-1 md:grid-cols-4 gap-4 h-[400px] md:h-[500px] mb-8"
+                >
+                    <!-- Main Image -->
                     <div
-                        class="relative rounded-2xl overflow-hidden group cursor-pointer hidden md:block"
-                        on:click={() => openGallery(i + 1)}
+                        class="md:col-span-2 md:row-span-2 relative rounded-2xl overflow-hidden group cursor-pointer"
+                        on:click={() => openGallery(0)}
                     >
                         <img
-                            src={img.url}
-                            alt="Gallery {i}"
+                            src={displayImages[0]?.url ||
+                                "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80"}
+                            alt="Main"
                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
-                        {#if i === 3 && allImages.length > 5}
-                            <div
-                                class="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg backdrop-blur-sm"
-                            >
-                                +{allImages.length - 5} photos
-                            </div>
-                        {/if}
                     </div>
-                {/each}
-            </div>
+                    <!-- Sub Images -->
+                    {#each displayImages.slice(1, 5) as img, i}
+                        <div
+                            class="relative rounded-2xl overflow-hidden group cursor-pointer hidden md:block"
+                            on:click={() => openGallery(i + 1)}
+                        >
+                            <img
+                                src={img.url}
+                                alt="Gallery {i}"
+                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                            {#if i === 3 && allImages.length > 5}
+                                <div
+                                    class="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg backdrop-blur-sm"
+                                >
+                                    +{allImages.length - 5} photos
+                                </div>
+                            {/if}
+                        </div>
+                    {/each}
+                </div>
+            {/if}
 
             <!-- Header Info -->
             <div
@@ -312,36 +343,56 @@
                         <div
                             class="relative border-l-2 border-slate-200 ml-3 space-y-8 pl-8 py-2"
                         >
-                            {#each tour.destinations as dest, i}
-                                <div class="relative">
-                                    <div
-                                        class="absolute -left-[39px] top-0 w-5 h-5 rounded-full bg-emerald-600 border-4 border-white shadow-md"
-                                    ></div>
-                                    <h4
-                                        class="text-xl font-bold text-slate-900 mb-2"
-                                    >
-                                        Stop {i + 1}: {dest.country} - {dest.name}
-                                    </h4>
-                                    <p
-                                        class="text-slate-600 leading-relaxed mb-4"
-                                    >
-                                        {dest.description}
-                                    </p>
-                                    {#if dest.images && dest.images.length > 0}
+                            {#if tour.itinerary && tour.itinerary.length > 0}
+                                {#each tour.itinerary as day}
+                                    <div class="relative">
                                         <div
-                                            class="grid grid-cols-2 gap-3 mb-4 rounded-xl overflow-hidden"
+                                            class="absolute -left-[39px] top-0 w-5 h-5 rounded-full bg-emerald-600 border-4 border-white shadow-md"
+                                        ></div>
+                                        <h4
+                                            class="text-xl font-bold text-slate-900 mb-2"
                                         >
-                                            {#each dest.images.slice(0, 2) as img}
-                                                <img
-                                                    src={img.url}
-                                                    alt={dest.name}
-                                                    class="w-full h-32 object-cover"
-                                                />
-                                            {/each}
-                                        </div>
-                                    {/if}
-                                </div>
-                            {/each}
+                                            Day {day.day}
+                                        </h4>
+                                        <p
+                                            class="text-slate-600 leading-relaxed mb-4 whitespace-pre-line"
+                                        >
+                                            {day.content}
+                                        </p>
+                                    </div>
+                                {/each}
+                            {:else}
+                                {#each tour.destinations as dest, i}
+                                    <div class="relative">
+                                        <div
+                                            class="absolute -left-[39px] top-0 w-5 h-5 rounded-full bg-emerald-600 border-4 border-white shadow-md"
+                                        ></div>
+                                        <h4
+                                            class="text-xl font-bold text-slate-900 mb-2"
+                                        >
+                                            Stop {i + 1}: {dest.country} - {dest.name}
+                                        </h4>
+                                        <p
+                                            class="text-slate-600 leading-relaxed mb-4"
+                                        >
+                                            {dest.description}
+                                        </p>
+                                        {#if dest.images && dest.images.length > 0}
+                                            <div
+                                                class="grid grid-cols-2 gap-3 mb-4 rounded-xl overflow-hidden"
+                                            >
+                                                {#each dest.images.slice(0, 2) as img}
+                                                    <img
+                                                        src={img.url}
+                                                        alt={dest.name}
+                                                        class="w-full h-32 object-cover"
+                                                    />
+                                                {/each}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                {/each}
+                            {/if}
                         </div>
                     </div>
 

@@ -615,7 +615,7 @@
                                     }
                                     window.dispatchEvent(
                                         new CustomEvent("app:navigate", {
-                                            detail: `/booking/${tour._id}?guests=${guests}&date=${selectedDate}`,
+                                            detail: `/booking/${tour.slug || tour._id}?guests=${guests}&date=${selectedDate}`,
                                         }),
                                     );
                                 }}

@@ -21,6 +21,8 @@
     let isProcessing = false;
     let paymentMethod = "VNPAY";
 
+    let tourIdentifier = "";
+
     $: if (params && params.id) bookingId = params.id;
 
     async function fetchBookingDetails() {
@@ -30,9 +32,11 @@
             const res = await api.getBooking(bookingId);
             booking = res.data;
 
-            // Also fetch tour details for better summary
-            if (booking && booking.tour_id) {
-                const tourRes = await api.getTour(booking.tour_id);
+            // Fetch tour details using the identifier from URL (slug or ID)
+            // fallback to booking.tour_id if URL identifier is missing
+            const tourIdToFetch = tourIdentifier || booking.tour_id;
+            if (tourIdToFetch) {
+                const tourRes = await api.getTour(tourIdToFetch);
                 tour = tourRes.data;
             }
         } catch (err) {
@@ -44,11 +48,35 @@
     }
 
     onMount(() => {
-        if (!bookingId) {
-            const pathParts = window.location.pathname.split("/");
-            const idIndex = pathParts.indexOf("payment") + 1;
-            if (idIndex > 0 && idIndex < pathParts.length) {
-                bookingId = pathParts[idIndex];
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryBookingId = urlParams.get("bookingId");
+
+        const pathParts = window.location.pathname.split("/");
+        const idIndex = pathParts.indexOf("payment") + 1;
+
+        if (idIndex > 0 && idIndex < pathParts.length) {
+            // This part is now likely the slug (or ID in legacy cases)
+            tourIdentifier = pathParts[idIndex];
+        }
+
+        if (queryBookingId) {
+            bookingId = queryBookingId;
+        } else if (!bookingId) {
+            // Fallback logic: if no query bookingId, try to interpret path as bookingId
+            // (only if it looks like an ID and we didn't treat it as a slug?
+            // Actually, to support /payment/:bookingId legacy, if we failed to find bookingId in query,
+            // and the path part looks like an ID, we assume it IS the bookingId.
+            // But now we prefer it to be tourSlug.
+            // Let's stick to: if queryId exists, use it.
+            // If queryId missing, check if path looks like MongoID. If so, treat as bookingId.
+
+            if (/^[0-9a-fA-F]{24}$/.test(tourIdentifier)) {
+                bookingId = tourIdentifier;
+                // If the path IS the bookingId, then tourIdentifier is also that ID.
+                // We will fetch tour using booking.tour_id in the fetch function if tourIdentifier === bookingId?
+                // Or just let it try fetching tour by bookingId? No, getting tour by bookingID is wrong.
+                // So if path is bookingId, we should reset tourIdentifier to null so it falls back to booking.tour_id
+                tourIdentifier = "";
             }
         }
         fetchBookingDetails();

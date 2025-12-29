@@ -10,6 +10,7 @@
         CreditCard,
         Settings,
         LayoutDashboard,
+        Tag,
     } from "lucide-svelte";
     import DestinationsTab from "../components/admin/DestinationsTab.svelte";
     import UsersTab from "../components/admin/UsersTab.svelte";
@@ -17,14 +18,15 @@
     import BookingsTab from "../components/admin/BookingsTab.svelte";
     import PaymentsTab from "../components/admin/PaymentsTab.svelte";
     import ReviewsTab from "../components/admin/ReviewsTab.svelte";
+    import PromotionsTab from "../components/admin/PromotionsTab.svelte";
 
     let activeTab = "users";
 
-    onMount(() => {
+    $: if (!$auth.isLoading) {
         if (!$auth.isAuthenticated || !$auth.isAdmin) {
             window.location.href = "/";
         }
-    });
+    }
 
     const tabs = [
         { id: "users", label: "Users", icon: Users },
@@ -33,6 +35,7 @@
         { id: "bookings", label: "Bookings", icon: Calendar },
         { id: "reviews", label: "Reviews", icon: Star },
         { id: "payments", label: "Payments", icon: CreditCard },
+        { id: "promotions", label: "Promotions", icon: Tag },
     ];
 </script>
 
@@ -66,6 +69,7 @@
     <main class="ml-64 flex-1 p-8">
         <header class="flex justify-between items-center mb-8">
             <div>
+                <!-- Header content unchanged -->
                 <h1 class="text-2xl font-bold text-slate-800 capitalize">
                     {activeTab} Management
                 </h1>
@@ -103,6 +107,8 @@
                 <PaymentsTab />
             {:else if activeTab === "reviews"}
                 <ReviewsTab />
+            {:else if activeTab === "promotions"}
+                <PromotionsTab />
             {:else}
                 <div
                     class="flex items-center justify-center h-full text-slate-400 flex-col gap-4"

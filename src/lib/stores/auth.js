@@ -3,6 +3,7 @@ import { api } from '../api.svelte';
 
 function createAuthStore() {
     const { subscribe, set, update } = writable({
+        isLoading: true, // Default to true until init completes
         isAuthenticated: false,
         user: null,
         token: null,
@@ -21,7 +22,7 @@ function createAuthStore() {
             localStorage.setItem('isModerator', JSON.stringify(isModerator));
             localStorage.setItem('adminPermissions', JSON.stringify(adminPermissions));
 
-            set({ isAuthenticated: true, user, token, isAdmin, isModerator, adminPermissions });
+            set({ isLoading: false, isAuthenticated: true, user, token, isAdmin, isModerator, adminPermissions });
         },
         logout: async () => {
             // Optimistic UI: Clear state immediately
@@ -30,7 +31,7 @@ function createAuthStore() {
             localStorage.removeItem('isAdmin');
             localStorage.removeItem('isModerator');
             localStorage.removeItem('adminPermissions');
-            set({ isAuthenticated: false, user: null, token: null, isAdmin: false, isModerator: false, adminPermissions: [] });
+            set({ isLoading: false, isAuthenticated: false, user: null, token: null, isAdmin: false, isModerator: false, adminPermissions: [] });
 
             // Soft navigation to home page (avoids hard reload)
             window.history.pushState({}, '', '/');
@@ -46,6 +47,7 @@ function createAuthStore() {
             }
         },
         init: async () => {
+            // Note: isLoading is true by default
             try {
                 // Try to refresh token using HttpOnly cookie
                 const response = await fetch('http://localhost:8080/api/v1/auth/refresh', {
@@ -65,7 +67,7 @@ function createAuthStore() {
                     // Update state
                     localStorage.setItem('accessToken', access_token);
                     localStorage.setItem('user', JSON.stringify(user));
-                    set({ isAuthenticated: true, user, token: access_token, isAdmin, isModerator, adminPermissions });
+                    set({ isLoading: false, isAuthenticated: true, user, token: access_token, isAdmin, isModerator, adminPermissions });
                 } else {
                     // If refresh fails (401/403), clear state
                     throw new Error('Refresh failed');
@@ -77,7 +79,7 @@ function createAuthStore() {
                 localStorage.removeItem('isAdmin');
                 localStorage.removeItem('isModerator');
                 localStorage.removeItem('adminPermissions');
-                set({ isAuthenticated: false, user: null, token: null, isAdmin: false, isModerator: false, adminPermissions: [] });
+                set({ isLoading: false, isAuthenticated: false, user: null, token: null, isAdmin: false, isModerator: false, adminPermissions: [] });
             }
         }
     };

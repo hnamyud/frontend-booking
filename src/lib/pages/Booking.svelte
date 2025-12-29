@@ -38,7 +38,38 @@
 
     $: if (params && params.id) tourId = params.id;
     $: totalPrice = tour ? tour.price * guests : 0;
+
+    // Voucher Logic
+    let voucherCode = "";
+    let promotion = null;
+    let isCheckingVoucher = false;
+    let voucherError = "";
+    let discountAmount = 0;
+
+    $: if (promotion && totalPrice > 0) {
+        if (promotion.discountType === "PERCENTAGE") {
+            const calculated = (totalPrice * promotion.discountValue) / 100;
+            discountAmount = promotion.maxDiscountAmount
+                ? Math.min(calculated, promotion.maxDiscountAmount)
+                : calculated;
+        } else {
+            discountAmount = promotion.discountValue;
+        }
+
+        // Re-validate min booking value if price changes (e.g. guest count changed)
+        if (totalPrice < promotion.minBookingValue) {
+            promotion = null;
+            discountAmount = 0;
+            voucherError = `Đơn hàng chưa đạt giá trị tối thiểu ${formatPrice(promotion?.minBookingValue || 0)}`;
+        }
+    } else {
+        discountAmount = 0;
+    }
+
+    $: finalPrice = Math.max(0, totalPrice - discountAmount);
+
     // Derive effective start date: selected param > tour start
+
     $: effectiveStartDate = selectedDate || tour?.timeStart || "";
 
     // Prefill user data if logged in
@@ -114,6 +145,45 @@
         });
     }
 
+    async function applyVoucher() {
+        if (!voucherCode.trim()) return;
+        isCheckingVoucher = true;
+        voucherError = "";
+        promotion = null;
+
+        try {
+            const res = await api.getPromotion(voucherCode);
+            const promo = res.data;
+
+            if (!promo.isActive)
+                throw new Error("Mã giảm giá đã hết hạn hoặc không hoạt động");
+            // Add date check if needed, though API might handle it.
+            // Ideally API handles logic, but let's be safe or rely on API response message if 400.
+            // Assuming API returns 200 with data if valid, or error if not.
+
+            if (totalPrice < promo.minBookingValue) {
+                throw new Error(
+                    `Đơn hàng tối thiểu ${formatPrice(promo.minBookingValue)}`,
+                );
+            }
+
+            promotion = promo;
+            // Clear error if success
+        } catch (err) {
+            console.error(err);
+            voucherError = err.message || "Mã giảm giá không hợp lệ";
+            promotion = null;
+        } finally {
+            isCheckingVoucher = false;
+        }
+    }
+
+    function removeVoucher() {
+        promotion = null;
+        voucherCode = "";
+        voucherError = "";
+    }
+
     function validate() {
         const errors = {};
         if (!fullName.trim()) errors.fullName = "Họ tên không được để trống";
@@ -146,6 +216,7 @@
                 },
                 note,
                 startDate: effectiveStartDate, // Using selected effective date
+                ...(promotion ? { code: promotion.code } : {}),
             };
 
             const res = await api.createBooking(payload);
@@ -154,7 +225,7 @@
             if (bookingId) {
                 window.dispatchEvent(
                     new CustomEvent("app:navigate", {
-                        detail: `/payment/${bookingId}`,
+                        detail: `/payment/${tour.slug || tour._id}?bookingId=${bookingId}`,
                     }),
                 );
             } else {
@@ -179,7 +250,7 @@
                 on:click={() =>
                     window.dispatchEvent(
                         new CustomEvent("app:navigate", {
-                            detail: `/tours/${tourId}`,
+                            detail: `/tours/${tour?.slug || tourId}`, // Use slug if available for clearer URL history
                         }),
                     )}
                 class="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
@@ -223,12 +294,14 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2 md:col-span-2">
                                 <label
+                                    for="fullName"
                                     class="text-sm font-semibold text-slate-700"
                                     >Họ và tên <span class="text-red-500"
                                         >*</span
                                     ></label
                                 >
                                 <input
+                                    id="fullName"
                                     type="text"
                                     bind:value={fullName}
                                     placeholder="Nguyễn Văn A"
@@ -244,11 +317,13 @@
 
                             <div class="space-y-2">
                                 <label
+                                    for="email"
                                     class="text-sm font-semibold text-slate-700"
                                     >Email <span class="text-red-500">*</span
                                     ></label
                                 >
                                 <input
+                                    id="email"
                                     type="email"
                                     bind:value={email}
                                     placeholder="example@email.com"
@@ -264,12 +339,14 @@
 
                             <div class="space-y-2">
                                 <label
+                                    for="phone"
                                     class="text-sm font-semibold text-slate-700"
                                     >Số điện thoại <span class="text-red-500"
                                         >*</span
                                     ></label
                                 >
                                 <input
+                                    id="phone"
                                     type="tel"
                                     bind:value={phone}
                                     placeholder="0912345678"
@@ -418,16 +495,90 @@
                                             >{formatPrice(tour.price)} x {guests}</span
                                         >
                                     </div>
+
+                                    <!-- Voucher Section -->
+                                    <div
+                                        class="py-2 border-t border-slate-200/60 space-y-2"
+                                    >
+                                        {#if !promotion}
+                                            <div class="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    bind:value={voucherCode}
+                                                    placeholder="Mã giảm giá"
+                                                    class="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 focus:border-emerald-500 focus:outline-none uppercase"
+                                                    on:keydown={(e) =>
+                                                        e.key === "Enter" &&
+                                                        applyVoucher()}
+                                                />
+                                                <button
+                                                    on:click={applyVoucher}
+                                                    disabled={isCheckingVoucher ||
+                                                        !voucherCode}
+                                                    class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors"
+                                                >
+                                                    {isCheckingVoucher
+                                                        ? "..."
+                                                        : "Áp dụng"}
+                                                </button>
+                                            </div>
+                                            {#if voucherError}
+                                                <p class="text-xs text-red-500">
+                                                    {voucherError}
+                                                </p>
+                                            {/if}
+                                        {:else}
+                                            <div
+                                                class="flex justify-between items-center text-sm text-emerald-600 bg-emerald-50 p-2 rounded-lg border border-emerald-100"
+                                            >
+                                                <span
+                                                    class="flex items-center gap-1 font-medium"
+                                                >
+                                                    <Check size={14} />
+                                                    {promotion.code}
+                                                </span>
+                                                <button
+                                                    on:click={removeVoucher}
+                                                    class="text-xs text-slate-400 hover:text-red-500"
+                                                    >Xóa</button
+                                                >
+                                            </div>
+                                        {/if}
+                                    </div>
+
+                                    {#if discountAmount > 0}
+                                        <div
+                                            class="flex justify-between text-sm text-emerald-600 font-medium"
+                                        >
+                                            <span>Giảm giá</span>
+                                            <span
+                                                >-{formatPrice(
+                                                    discountAmount,
+                                                )}</span
+                                            >
+                                        </div>
+                                    {/if}
+
                                     <div
                                         class="border-t border-slate-200 pt-3 flex justify-between items-center"
                                     >
                                         <span class="font-bold text-slate-900"
                                             >Tổng cộng</span
                                         >
-                                        <span
-                                            class="text-xl font-bold text-emerald-600"
-                                            >{formatPrice(totalPrice)}</span
-                                        >
+                                        <div class="text-right">
+                                            {#if discountAmount > 0}
+                                                <span
+                                                    class="block text-xs text-slate-400 line-through font-normal"
+                                                    >{formatPrice(
+                                                        totalPrice,
+                                                    )}</span
+                                                >
+                                            {/if}
+                                            <span
+                                                class="text-xl font-bold text-emerald-600"
+                                                >{formatPrice(finalPrice)}</span
+                                            >
+                                        </div>
                                     </div>
                                 </div>
 

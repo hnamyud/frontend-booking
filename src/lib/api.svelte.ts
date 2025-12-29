@@ -244,6 +244,33 @@ class ApiClient {
     async getTopTours(limit: number = 5) {
         return this.request<any>(`/api/v1/statistic/top-tours?limit=${limit}`, 'GET', undefined, this.getAuthHeaders());
     }
+
+    // Promotion API
+    async getPromotion(code: string) {
+        return this.request<GetPromotionResponse>(`/api/v1/promotions/${code}`, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async getPromotions(params: GetPromotionsParams = {}) {
+        const queryParams = new URLSearchParams();
+        if (params.current) queryParams.append('current', params.current.toString());
+        if (params.pageSize) queryParams.append('pageSize', params.pageSize.toString());
+
+        const queryString = queryParams.toString();
+        const url = `/api/v1/promotions${queryString ? `?${queryString}` : ''}`;
+        return this.request<GetPromotionsResponse>(url, 'GET', undefined, this.getAuthHeaders());
+    }
+
+    async createPromotion(data: Omit<Promotion, '_id' | 'usageCount' | 'isDeleted' | 'deletedAt' | 'createdAt' | 'updatedAt'>) {
+        return this.request<any>('/api/v1/promotions', 'POST', data, this.getAuthHeaders());
+    }
+
+    async updatePromotion(id: string, data: Partial<Omit<Promotion, '_id' | 'usageCount' | 'isDeleted' | 'deletedAt' | 'createdAt' | 'updatedAt'>>) {
+        return this.request<any>(`/api/v1/promotions/${id}`, 'PATCH', data, this.getAuthHeaders());
+    }
+
+    async deletePromotion(id: string) {
+        return this.request<any>(`/api/v1/promotions/${id}`, 'DELETE', undefined, this.getAuthHeaders());
+    }
 }
 
 export interface Review {
@@ -258,6 +285,49 @@ export interface Review {
     booking_id: string;
     rating: number;
     comment: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface GetPromotionResponse {
+    statusCode: number;
+    message: string;
+    data: Promotion;
+}
+
+export interface GetPromotionsParams {
+    current?: number;
+    pageSize?: number;
+}
+
+export interface GetPromotionsResponse {
+    statusCode: number;
+    message: string;
+    data: {
+        meta: {
+            current: number;
+            pageSize: number;
+            pages: number;
+            total: number;
+        };
+        result: Promotion[];
+    };
+}
+
+export interface Promotion {
+    _id: string;
+    code: string;
+    discountType: 'PERCENTAGE' | 'FIXED_AMOUNT';
+    discountValue: number;
+    maxDiscountAmount: number;
+    minBookingValue: number;
+    usageLimit: number;
+    usageCount: number;
+    startDate: string;
+    endDate: string;
+    isActive: boolean;
+    isDeleted: boolean;
+    deletedAt: string | null;
     createdAt: string;
     updatedAt: string;
 }

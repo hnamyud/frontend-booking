@@ -27,20 +27,10 @@
 
     // Simple routing
     async function navigate(path) {
-        if (!document.startViewTransition) {
-            window.history.pushState({}, "", path);
-            const url = new URL(path, window.location.origin);
-            currentPath = url.pathname;
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-        }
-
-        document.startViewTransition(() => {
-            window.history.pushState({}, "", path);
-            const url = new URL(path, window.location.origin);
-            currentPath = url.pathname;
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        });
+        window.history.pushState({}, "", path);
+        const url = new URL(path, window.location.origin);
+        currentPath = url.pathname;
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     onMount(async () => {
